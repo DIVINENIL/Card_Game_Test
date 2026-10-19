@@ -50,7 +50,10 @@ button.pri{background:linear-gradient(90deg,var(--a),#a83dff);border:0;font-weig
 .dbg{position:fixed;inset:0;background:#000a;z-index:35}.dcard{position:fixed;z-index:36;left:50%;top:50%;transform:translate(-50%,-50%);width:min(86vw,320px);padding:18px 16px;border-radius:16px;background:linear-gradient(135deg,#0b0830,#100828);border:2px solid var(--c);box-shadow:0 20px 60px #000;line-height:1.6}
 .dcard .em{font-size:40px;text-align:center}.bt{display:flex;gap:6px;justify-content:center;margin-top:10px}
 .wv{position:fixed;left:0;right:0;height:60px;z-index:30;pointer-events:none;background:linear-gradient(90deg,transparent,var(--b),#fff,var(--b),transparent);animation:wv .6s forwards}@keyframes wv{from{opacity:0}to{opacity:1}}
-#over{position:fixed;inset:0;z-index:60;background:#000c;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:44px;font-weight:900}
+.bgs{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;min-height:16px;margin-top:2px}
+.bg{font-size:11px;background:#0009;border-radius:8px;padding:0 5px;cursor:help}
+.dm2{cursor:help}
+ #over{position:fixed;inset:0;z-index:60;background:#000c;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:44px;font-weight:900}
 </style></head><body>
 <div id="menu">
 <h1>⚔️ ANIME CARD FIGHT</h1>
@@ -94,7 +97,7 @@ function hit(S,s,i,d,ev){const c=S.p[s].field[i];if(c.hp<=0)return;c.hp-=d;S.p[s
 function startTurn(S,s,ev){const p=S.p[s];S.tc++;
 if(p.skip){p.skip=0;ev.push({k:'txt',t:`⏳ P${s+1} ถูกหยุดเวลา! ข้ามเทิร์น`});return startTurn(S,1-s,ev)}
 S.cur=s;p.maxL=Math.min(5,1+Math.ceil(S.tc/2));const b=p.bonus||0;p.bonus=0;p.light=Math.min(p.maxL+b,p.light+2+b);p.did=0;p.drawn=0;
-p.field.forEach(c=>{c.acted=0;c.st=null;if(c.fx.stun>0)c.acted=1;if(c.fx.regen>0)c.hp=Math.min(c.mhp,c.hp+3)});
+p.field.forEach((c,i)=>{c.acted=0;c.st=null;if(c.fx.stun>0)c.acted=1;if(c.fx.regen>0)c.hp=Math.min(c.mhp,c.hp+3); if(c.pc){c.pc=0;if(c.hp>0){const v=gainL(c,2);ev.push({k:'chg2',s,i,v})}}});
 ev.push({k:'turn',s});
 const d=S.dom[s];if(d){const o=S.p[1-s];
  if(!o.field.some(c=>c.hp>0)){ev.push({k:'dot',s:1-s,i:-1,d:2});o.hp-=2;o.dmg+=2}
@@ -125,7 +128,7 @@ if(a.t=='play'){const cd=me.hand[a.i];if(!cd)return 0;
 if(!mine)return 0;
 if(a.t=='end'){me.field.forEach(c=>{for(const k in c.fx)if(--c.fx[k]<=0)delete c.fx[k]});fin(S,ev);if(!S.over){startTurn(S,1-s,ev);fin(S,ev)}return 1}
 const c=me.field[a.c];if(!c||c.hp<=0||c.acted)return 0;
-if(a.t=='charge'){const v=gainL(c,2);c.acted=1;me.did=1;ev.push({k:'chg',s,i:a.c,v});return fin(S,ev)}
+if(a.t=='charge'){c.pc=1;c.acted=1;me.did=1;ev.push({k:'chg',s,i:a.c});return fin(S,ev)}
 if(a.t=='def'){c.st=DF[c.id];c.acted=1;me.did=1;ev.push({k:'def',s,i:a.c,d:c.st});return fin(S,ev)}
 if(a.t=='skill'){const k=sk(c.id,a.s);if(!k||!SKS[CC[c.id]].includes(a.s)||c.light<k.c||(S.tc<=1&&k.t!='sup'))return 0;const nm=C[c.id].s[a.s],pw=k.c+c.light+me.light;
  if(k.t=='sup'){c.light-=k.c;c.acted=1;me.did=1;ev.push({k:'sup',s,i:a.c,nm});applyFx(S,s,a.c,X[c.id][2],-1,ev);return fin(S,ev)}
@@ -154,13 +157,13 @@ function startGame(){S={mode:MODE,tc:0,cur:0,over:null,p:[mkp(),mkp()],dom:[null
 async function commit(ev){const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();if(conn&&conn.open)conn.send({t:'st',d:last});await recv(snap,ev);if(BOT&&S.cur==1&&!S.over)bot()}
 let DL=0,TT=0,TC=-1,TC2=-1;
 setInterval(()=>{const t=$('#tm');if(!t||!G||G.over)return;const s=Math.max(0,Math.ceil((DL-Date.now())/1000));t.textContent=s+'s';t.style.color=s<=15?'#ff5a5a':''},250);
-function tm(){if(!HOST)return;if(S.over){clearTimeout(TT);return}if(S.tc===TC)return;TC=S.tc;clearTimeout(TT);if(BOT&&S.cur==1)return;TT=setTimeout(()=>{if(S.tc===TC&&!S.over)hostApply(S.cur,{t:'end'})},30000)}
+function tm(){if(!HOST)return;if(S.over){clearTimeout(TT);return}if(S.tc===TC)return;TC=S.tc;clearTimeout(TT);if(BOT&&S.cur==1)return;TT=setTimeout(()=>{if(S.tc===TC&&!S.over)hostApply(S.cur,{t:'end'})},90000)}}
 function hostApply(s,a){const ev=[];if(A(S,s,a,ev))commit(ev)}
 function doAct(a){if(HOST)hostApply(SEAT,a);else if(conn&&conn.open)conn.send({t:'do',d:a})}
 function recv(s2,ev){return new Promise(res=>{Q.push([s2,ev,res]);pump()})}
 async function pump(){if(busy)return;busy=true;while(Q.length){const[s2,ev,res]=Q.shift();
  if(G){for(const e of ev)await pe(e)}else{$('#menu').style.display='none';$('#game').style.display='flex'}
- G=s2;if(G.tc!==TC2){TC2=G.tc;DL=Date.now()+30000}render();
+ G=s2;if(G.tc!==TC2){TC2=G.tc;DL=Date.now()+90000}render();
  if(G.over){$('#ot').textContent=G.over.w==-1?'เสมอ!':G.over.w==SEAT?'🏆 ชนะ!':'💀 แพ้…';$('#over').style.display='flex'}res()}busy=false}
 
 async function bot(){await sleep(900);const p=S.p[1],o=S.p[0];
@@ -208,14 +211,15 @@ function fl(node,t,col,ms=900){if(!node)return;const r=node.getBoundingClientRec
 async function banner(t,col,ms=1400){const b=$('#ban');b.style.setProperty('--c',col);b.firstChild.innerHTML=t;b.className='ban on';await sleep(ms);b.className='ban'}
 function hpUpd(s,i,hp){const c=G.p[s].field[i],n=el(s,i);if(!c||!n)return;c.hp=Math.max(0,hp);n.querySelector('.bar i').style.width=(c.hp/c.mhp*100)+'%';n.querySelector('.bar i').style.background=c.hp>c.mhp*.5?'#4ade80':'#ffb86b';n.querySelector('.em').style.opacity=c.hp>0?1:.3}
 async function cut(e){const A=G.p[e.s].field[e.i],T=e.ti>=0?G.p[e.ts].field[e.ti]:null,a=C[A.id],t=T?C[T.id]:{n:'Player '+(e.ts+1),e:'🧑',col:'#666'},o=$('#cut');o.style.setProperty('--c',a.col);o.style.setProperty('--c2',t.col);
- o.innerHTML=`<div class="h L"><div class=big>${a.e}</div><div class=nm>${a.n}${e.s==SEAT?'':' (ศัตรู)'}<br>⚔️ ${A.atk}</div></div><div class="h R"><div class=big>${t.e}</div><div class=nm>${t.n}${e.ts==SEAT?'':' (ศัตรู)'}<br>⚔️ ${T?T.atk:'-'}</div></div><div class=ttl>${a.n} VS ${t.n}</div><div class=fl2></div><div class=dm>-${e.dmg}</div>`;
+ o.innerHTML=`<div class="h L"><div class=big>${a.e}</div><div class=nm>${a.n}${e.s==SEAT?'':' (ศัตรู)'}<br>⚔️ ${A.atk}</div></div><div class="h R"><div class=big>${t.e}</div><div class=nm>${t.n}${e.ts==SEAT?'':' (ศัตรู)'}<br>⚔️ ${T?T.atk:'-'}</div></div><div class=ttl>${e.nm}</div><div class=fl2></div><div class=dm>-${e.dmg}</div>`;
  o.className='cut in';await sleep(1400);o.classList.add('go');await sleep(1100);o.className='cut'}
 async function pe(e){const me=SEAT;
 if(e.k=='turn'){await toast(e.s==me?'⚡ ตาของคุณ':'⏳ ตาศัตรู',700)}
 else if(e.k=='txt')await toast(e.t,900);
 else if(e.k=='fx'){if(e.t=='ts'){await banner('⏳ TIME STOP ⏳','#35e0ff')}else{fl(el(e.s,e.i),({heal:'+8 💖',regen:'💚 Regen',shield:'🔰 Protection',pow:'💪 ATK +2',cell:'🔋 +2'})[e.t]||'✨','#4ade80');await sleep(600)}}
-else if(e.k=='chg'){const n=el(e.s,e.i);fl(n,'⚡ +'+(e.v||2),'#35e0ff');n&&n.animate([{filter:'brightness(1)'},{filter:'brightness(2.5) drop-shadow(0 0 14px #35e0ff)'},{filter:'brightness(1)'}],{duration:700});await sleep(500)}
-else if(e.k=='def'){const n=el(e.s,e.i);if(e.d=='counter'){if(e.s==me){fl(n,'🗡 COUNTER (ซ่อน)','#fff');await sleep(700)}}else{fl(n,e.d=='guard'?'🛡 GUARD':'💨 EVADE','#fff');await sleep(700)}}
+else if(e.k=='chg'){if(e.s==me){const n=el(e.s,e.i);fl(n,'⚡ ชาร์จ (รอเทิร์นหน้า)','#35e0ff');await sleep(600)}}
+else if(e.k=='chg2'){const n=el(e.s,e.i);fl(n,'⚡ +'+e.v,'#35e0ff');n&&n.animate([{filter:'brightness(1)'},{filter:'brightness(2.5) drop-shadow(0 0 14px #35e0ff)'},{filter:'brightness(1)'}],{duration:700});await sleep(600)}
+else if(e.k=='def'){if(e.s==me){const n=el(e.s,e.i);fl(n,({guard:'🛡 GUARD',evade:'💨 EVADE',counter:'🗡 COUNTER'})[e.d],'#fff');await sleep(700)}}
 else if(e.k=='ctr'){const t=el(e.s,e.i),a=el(e.ts,e.ti);await toast('🗡 COUNTER!',500);if(!t||!a)return;const ar=t.getBoundingClientRect(),tr=a.getBoundingClientRect();t.style.zIndex=5;t.animate([{transform:'none'},{transform:`translate(${tr.left-ar.left}px,${tr.top-ar.top}px) scale(1.05)`},{transform:'none'}],{duration:420});await sleep(420);fl(a,'-'+e.dmg,'#ff5a5a');t.style.zIndex=''}
 else if(e.k=='aoe'){const a=el(e.s,e.i);a&&a.animate([{transform:'none'},{transform:'scale(1.3)',filter:'brightness(2)'},{transform:'none'}],{duration:500});await toast('🌊 '+e.nm,500);
  const rw=$(e.ts==me?'#mf':'#of').getBoundingClientRect(),w=document.createElement('div');w.className='wv';w.style.top=(rw.top+rw.height/2-30)+'px';document.body.append(w);setTimeout(()=>w.remove(),900);
@@ -238,7 +242,15 @@ else if(e.k=='atk'){if(e.t=='ult')await cut(e);const a=el(e.s,e.i),t=el(e.ts,e.t
   const x=document.createElement('div');x.className='fl';x.textContent=e.t=='ult'?'💥':'💢';x.style.cssText=`left:${tr.left+tr.width/2-20}px;top:${tr.top+30}px;font-size:56px`;document.body.append(x);setTimeout(()=>x.remove(),800);
   await sleep(450)}}
 }
-const SN={stun:'😵 งงงวย',down:'⬇️ Damage Down',up:'⬆️ Damage Up',chup:'🔋⬆️ Charge Up',chdn:'🔋⬇️ Charge Down',prot:'🔰 Protection',vuln:'💔 Vulnerable'},DN={guard:'🛡 Guard',evade:'💨 Evade',counter:'🗡 Counter'};
+SN.regen='💚 Regen';
+const SD={stun:'ทำอะไรไม่ได้ในเทิร์นของตัวเอง',down:'ดาเมจที่ทำได้ลดลงครึ่งหนึ่ง',up:'ดาเมจที่ทำได้ x1.5',chup:'Charge ได้ light มากขึ้น x1.5',chdn:'Charge ได้ light น้อยลงครึ่งหนึ่ง',prot:'รับดาเมจน้อยลง 40%',vuln:'รับดาเมจมากขึ้น 50%',regen:'ฟื้น 3 HP ทุกต้นเทิร์น'};
+const ED={heal:'ฟื้น HP ตัวละครที่เลือก +8',pow:'เพิ่ม ATK ตัวละครที่เลือก +2 ถาวร',slot:'เพิ่มช่องวางตัวละคร +1',ts:'ข้ามเทิร์นถัดไปของศัตรู · ใช้ได้ทุกเมื่อแม้ไม่ใช่ตาของคุณ',regen:'ตัวละครที่เลือกฟื้น 3 HP ต้นเทิร์น เป็นเวลา 3 เทิร์น',focus:'เทิร์นหน้าได้ light เพิ่ม +2 (เกินเพดานได้)',shield:'ตัวละครที่เลือกรับดาเมจน้อยลง 40% เป็นเวลา 3 เทิร์น',cell:'light ของตัวละครที่เลือก +2'};
+const strip=h=>h.replace(/<br>/g,' · ').replace(/<[^>]+>/g,'');
+function hideDc(){$('#dc').innerHTML=''}
+function hd(h){if(h.k=='e'){const d=E[h.id];return `<div class=em>${d.e}</div><div><b>${d.n}</b> · ✦${d.c}<br>${ED[h.id]}</div>`}
+ const d=C[h.id];return `<div class=em>${d.e}</div><div><b>${d.n}</b> · ✦${CC[h.id]}<br>❤️${d.hp} ⚔️${d.atk} · ${DN[DF[h.id]]}<br>`+SKS[CC[h.id]].map(i=>{const k=sk(h.id,i);return `${TN[k.t]} ${d.s[i]} (✦${k.c})`}).join('<br>')+'</div>'}
+function tip(c){const d=C[c.id];
+ return `${d.n} ❤️${c.hp}/${c.mhp} ⚔️${c.atk} ✦${c.light}&#10;`+SKS[CC[c.id]].map(i=>strip(desc(c,'p'+i))).join('&#10;')+Object.keys(c.fx).map(k=>`&#10;${SN[k]} (${c.fx[k]}): ${SD[k]}`).join('')}
 function desc(c,p){const d=C[c.id];
 if(p=='pc'){let m=2;if(c.fx.chup>0)m=Math.ceil(m*1.5);if(c.fx.chdn>0)m=Math.floor(m/2);return '<b>⚡ Charge</b> · ได้ light ตัวละคร +'+m+' (สูงสุด 5)'}
 if(p=='pd'){const df=DF[c.id];return `<b>${DN[df]}</b> · `+{guard:'ลดดาเมจ Melee/Bullet ลงครึ่งหนึ่งจนถึงต้นเทิร์นหน้า',evade:'มีโอกาสหลบ Melee/Bullet',counter:'ตอบโต้เมื่อถูก Melee/Bullet'}[df]}
@@ -248,21 +260,50 @@ return `<b>${d.s[n]}</b> · ${ty[k.t]||''}<br>${k.t=='domain'||k.t=='sup'?'':'�
 
 /* ---------- render / input ---------- */
 const pips=(l,m)=>'✦'.repeat(l)+'<span style="opacity:.3">'+'✧'.repeat(Math.max(0,m-l))+'</span>';
-function chH(s,i,c){const d=C[c.id],tg=U.t&&U.t.side==s&&c.hp>0,sel=U.c===i&&s==SEAT;return `<div class="ch ${c.acted?'dim':''} ${sel?'sel':''} ${tg?'tgt':''}" id="c${s}_${i}" style="--c:${d.col}"><div class="em">${d.e}</div><b>${d.n}</b><div class="bar"><i style="width:${c.hp/c.mhp*100}%"></i></div><small>❤️${c.hp} ⚔️${c.atk} ✦${c.light}</small></div>`}
+function chH(s,i,c){const d=C[c.id],tg=U.t&&U.t.side==s&&c.hp>0,sel=U.c===i&&s==SEAT;
+const bd=Object.keys(c.fx).map(k=>`<span class=bg title="${SN[k]}: ${SD[k]} (เหลือ ${c.fx[k]} เทิร์น)">${SN[k].split(' ')[0]}${c.fx[k]}</span>`).join('')+(s==SEAT&&c.st?`<span class=bg title="${DN[c.st]}">${DN[c.st].split(' ')[0]}</span>`:'')+(s==SEAT&&c.pc?`<span class=bg title="ชาร์จ: ได้ light +2 ต้นเทิร์นหน้า">⚡รอ</span>`:'');
+return `<div class="ch ${c.acted?'dim':''} ${sel?'sel':''} ${tg?'tgt':''}" id="c${s}_${i}" style="--c:${d.col}" title="${tip(c)}"><div class="em">${d.e}</div><b>${d.n}</b><div class="bar"><i style="width:${c.hp/c.mhp*100}%"></i></div><small>❤️${c.hp} ⚔️${c.atk} ✦${c.light}</small><div class=bgs>${bd}</div></div>`}
 function info(s){const p=G.p[s];return `<span><b>P${s+1}${s==SEAT?' (คุณ)':''}</b> ${G.cur==s?'◀':''}</span><span>Light ${pips(p.light,p.maxL)}</span><span id=hp${s}>❤️${p.hp}/20</span>`}
 function render(){if(!G)return;const me=SEAT,op=1-me,my=G.cur==me&&!G.over;
 $('#opi').innerHTML=info(op);
 $('#mei').innerHTML=info(me)+`<span><button id=bd ${my&&G.tc>1&&!G.p[me].did&&G.p[me].drawn<2&&G.p[me].light>=1&&G.p[me].hand.length<7?'':'disabled'} data-a=draw>จั่ว</button> <button id=en ${my?'':'disabled'} data-a=end>จบเทิร์น</button></span>`;
 $('#of').innerHTML=G.p[op].field.map((c,i)=>chH(op,i,c)).join('')||'<small>— ว่าง —</small>';
 $('#mf').innerHTML=G.p[me].field.map((c,i)=>chH(me,i,c)).join('')||'<small>— ว่าง —</small>';
-const dm=[0,1].map(s=>G.dom[s]?`<span class=dm2>🌌 ${G.dom[s].nm} (${s==me?'คุณ':'ศัตรู'}) ${G.dom[s].t}t · ${G.dom[s].pw}</span>`:'').join('');
+const dm=[0,1].map(s=>G.dom[s]?`<span class=dm2 title="${s==me?'ของคุณ':'ของศัตรู'} · ${G.dom[s].nm}&#10;เหลือ ${G.dom[s].t} เทิร์น · พลัง ${G.dom[s].pw}&#10;ต้นเทิร์นของเจ้าของ: ตัวละครฝ่ายตรงข้ามทุกตัวโดน 1 ดาเมจ (ถ้าไม่มีตัวละคร ผู้เล่นโดน 2)&#10;ถูกทับได้ถ้าอีกฝั่งเปิดโดเมนที่พลังสูงกว่า">🌌 ${G.dom[s].nm} (${s==me?'คุณ':'ศัตรู'}) ${G.dom[s].t}t · ${G.dom[s].pw}</span>`:'').join('');
 $('#mid').innerHTML=`<div>รอบ ${Math.ceil(G.tc/2)} · ${G.mode=='dmg'?'Damage Race':'KO'} · ${my?'<b style="color:var(--b)">ตาของคุณ</b>':'ตาศัตรู'} · ⏱ <b id=tm>${Math.max(0,Math.ceil((DL-Date.now())/1000))}s</b> ${dm}</div>`;
 const c=U.c!=null&&my?G.p[me].field[U.c]:null;
 $('#act').innerHTML=c?`<button data-a=pc class="${U.p=='pc'?'pri':''}">⚡ Charge</button><button data-a=pd class="${U.p=='pd'?'pri':''}">${DN[DF[c.id]]}</button>`+SKS[CC[c.id]].map(i=>{const k=sk(c.id,i);return `<button data-a=p${i} class="${U.p=='p'+i?'pri':''}" ${c.light>=k.c?'':'style="opacity:.5"'}>${TN[k.t]} ${C[c.id].s[i]}</button>`}).join(''):'<small>เลือกตัวละครของคุณเพื่อสั่งการ</small>';
-$('#dc').innerHTML=c&&U.p?`<div class=dbg data-a=close></div><div class=dcard style="--c:${C[c.id].col}"><div class=em>${C[c.id].e}</div><div>${desc(c,U.p)}</div><div class=bt><button class=pri data-a=use>ใช้</button> <button data-a=close>ปิด</button></div></div>`:'';
+const hh=U.h!=null?G.p[me].hand[U.h]:null;
+$('#dc').innerHTML=c&&U.p?`<div class=dbg data-a=close></div><div class=dcard style="--c:${C[c.id].col}"><div class=em>${C[c.id].e}</div><div>${desc(c,U.p)}</div><div class=bt><button class=pri data-a=use>ใช้</button> <button data-a=close>ปิด</button></div></div>`:hh?`<div class=dbg data-a=close></div><div class=dcard style="--c:${hh.k=='c'?C[hh.id].col:'#35e0ff'}">${hd(hh)}<div class=bt><button class=pri data-a=use>${hh.k=='c'?'ลงการ์ด':'ใช้การ์ด'}</button> <button data-a=close>ปิด</button></div></div>`:'';
 $('#hand').innerHTML=G.p[me].hand.map((h,i)=>{if(h.k=='c'){const d=C[h.id];return `<div class="cd ${G.p[me].light>=CC[h.id]?'':'no'}" data-h=${i} style="--c:${d.col}"><div class=em>${d.e}</div><b>${d.n}</b><small>✦${CC[h.id]}</small></div>`}else{return `<div class="cd e ${G.p[me].light>=E[h.id].c?'':'no'}" data-h=${i}><div class=em>${E[h.id].e}</div><b>${E[h.id].n}</b><small>✦${E[h.id].c}</small></div>`}}).join('')}
 
 document.addEventListener('click',e=>{if(busy||!G||G.over||!$('#game').offsetParent)return;
+const me=SEAT,op=1-me,my=G.cur==me,chE=e.target.closest('.ch'),cd=e.target.closest('.cd'),b=e.target.closest('[data-a]');
+let s,i;if(chE){[s,i]=chE.id.slice(1).split('_').map(Number)}
+if(U.t&&chE&&s==U.t.side&&G.p[s].field[i]&&G.p[s].field[i].hp>0){const a={...U.t.a,tg:i};U={};hideDc();doAct(a);return}
+if(b){const v=b.dataset.a;
+ if(v=='draw'||v=='end'){U={};hideDc();doAct({t:v});return}
+ if(v=='close'){U.p=null;U.h=null;render();return}
+ if(v=='pc'||v=='pd'||/^p\d$/.test(v)){U.p=v;render();return}
+ if(v=='use'){
+  if(U.h!=null){const hi=U.h,h=G.p[me].hand[hi];
+   if(!h){U={};render();return}
+   if(h.id=='ts'){U={};hideDc();doAct({t:'play',i:hi});return}
+   if(!my){toast('ยังไม่ถึงตาของคุณ',800);return}
+   if(h.k=='c'||!E[h.id].tg){U={};hideDc();doAct({t:'play',i:hi});return}
+   U={t:{a:{t:'play',i:hi},side:me}};render();toast('เลือกตัวละครเป้าหมาย',800);return}
+  const p=U.p,c=U.c,c0=G.p[me].field[c];if(!c0||!p)return;
+if(p=='pc'){let m=2;if(c.fx.chup>0)m=Math.ceil(m*1.5);if(c.fx.chdn>0)m=Math.floor(m/2);return '<b>⚡ Charge</b> · ได้ light ตัวละคร +'+m+' ตอนต้นเทิร์นหน้า (สูงสุด 5) · ศัตรูมองไม่ออกว่าชาร์จหรือตั้งรับ'}
+  else if(p=='pd'){U={};hideDc();doAct({t:'def',c})}
+  else{const n=+p[1],k=sk(c0.id,n);
+   if(c0.light<k.c){toast('Light ตัวละครไม่พอ',800);return}
+   if(G.tc<=1&&k.t!='sup'){toast('เทิร์นแรกโจมตีไม่ได้',800);return}
+   if(['melee','bullet','ult'].includes(k.t)&&G.p[op].field.some(x=>x.hp>0)){U={t:{a:{t:'skill',c,s:n},side:op}};render();toast('เลือกเป้าหมาย',800)}
+   else{U={};hideDc();doAct({t:'skill',c,s:n})}}
+  return}}
+if(cd){const hi=+cd.dataset.h;if(!G.p[me].hand[hi])return;U={h:hi};render();return}
+if(chE&&s==me&&my&&G.p[me].field[i]&&!G.p[me].field[i].acted){U={c:i};render();return}
+U={};render()});
 const me=SEAT,op=1-me,my=G.cur==me,chE=e.target.closest('.ch'),cd=e.target.closest('.cd'),b=e.target.closest('[data-a]');
 let s,i;if(chE){[s,i]=chE.id.slice(1).split('_').map(Number)}
 if(U.t&&chE&&s==U.t.side&&G.p[s].field[i]&&G.p[s].field[i].hp>0){const a={...U.t.a,tg:i};U={};doAct(a);return}
