@@ -150,7 +150,7 @@ return 0}
 /* ---------- host / network ---------- */
 let G=null,S=null,SEAT=0,HOST=true,BOT=false,MODE='ko',busy=false,Q=[],U={},last=null;
 let peer=null,conn=null;
-function startGame(){S={mode:MODE,tc:0,cur:0,over:null,p:[mkp(),mkp()],dom:[null,null]};const ev=[];startTurn(S,0,ev);commit([]);$('#menu').style.display='none';$('#game').style.display='flex'}
+function startGame(){S={mode:MODE,tc:0,cur:0,over:null,p:[mkp(),mkp()],dom:[null,null]};const ev=[];startTurn(S,rnd(2),ev);commit([]);$('#menu').style.display='none';$('#game').style.display='flex';toast(S.cur==SEAT?'🎲 คุณได้เริ่มก่อน!':'🎲 ศัตรูเริ่มก่อน',1500);}
 async function commit(ev){const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();if(conn&&conn.open)conn.send({t:'st',d:last});await recv(snap,ev);if(BOT&&S.cur==1&&!S.over)bot()}
 let DL=0,TT=0,TC=-1,TC2=-1;
 setInterval(()=>{const t=$('#tm');if(!t||!G||G.over)return;const s=Math.max(0,Math.ceil((DL-Date.now())/1000));t.textContent=s+'s';t.style.color=s<=15?'#ff5a5a':''},250);
