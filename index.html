@@ -77,6 +77,9 @@ st:{n:'Saitama',e:'👊',col:'#c9a227',hp:30,atk:4,s:['Normal Punch','Consecutiv
 gk:{n:'Goku',e:'🔥',col:'#2f7be8',hp:22,atk:6,s:['Kick Rush','Kamehameha','Ultra Instinct','Spirit Bomb','Energy Blast Rain']}};
 const sk=(id,n)=>n==2&&id!='gj'?{t:'sup',c:1,m:0}:SK[n];
 const CC={gj:3,nr:2,lf:2,lv:1,st:3,gk:2};
+ // ระดับการ์ด (ตามค่า light ที่ใช้วาง) → สกิลที่ใช้ได้ (index ของ SK)
+// 1 = 3 สกิล · 2 = 4 สกิล · 3 = 5 สกิล
+const SKS={1:[0,1,2],2:[0,1,2,3],3:[0,1,2,3,4]};
 const X={gj:[0,{w:'t',k:'down',n:2,p:.7},{w:'e',k:'stun',n:1,p:1},{w:'t',k:'stun',n:1,p:.5},{w:'e',k:'vuln',n:2,p:.6}],nr:[0,{w:'s',k:'up',n:2,p:1},{w:'a',k:'chup',n:3,p:1},{w:'t',k:'down',n:2,p:.5},{w:'e',k:'vuln',n:1,p:.6}],lf:[0,{w:'t',k:'down',n:1,p:.9},{w:'a',k:'chup',n:2,p:.9},{w:'t',k:'stun',n:1,p:.6},{w:'e',k:'vuln',n:2,p:.5}],lv:[0,{w:'s',k:'up',n:2,p:1},{w:'a',k:'chup',n:2,p:1},{w:'t',k:'down',n:1,p:.8},{w:'e',k:'vuln',n:1,p:.5}],st:[0,{w:'t',k:'down',n:1,p:.9},{w:'a',k:'chup',n:2,p:.9},{w:'t',k:'stun',n:1,p:.5},{w:'e',k:'vuln',n:3,p:.7}],gk:[0,{w:'s',k:'up',n:2,p:1},{w:'a',k:'chup',n:2,p:1},{w:'t',k:'down',n:2,p:.8},{w:'e',k:'vuln',n:1,p:.6}]};
 const DF={gj:'evade',nr:'counter',lf:'guard',lv:'evade',st:'guard',gk:'counter'};
 const CK=Object.keys(C),E={heal:{n:'Healing Light',e:'💖',c:1,tg:1},pow:{n:'Power Up',e:'💪',c:1,tg:1},slot:{n:'Slot Expand',e:'🟦',c:1,tg:0},ts:{n:'Time Stop',e:'⏳',c:5,tg:0},regen:{n:'Regenerate',e:'💚',c:1,tg:1},focus:{n:'Focus',e:'🧘',c:1,tg:0},shield:{n:'Shield',e:'🔰',c:1,tg:1},cell:{n:'Cell',e:'🔋',c:1,tg:1}};
@@ -106,7 +109,7 @@ function applyFx(S,s,ci,x,ti,ev){if(!x||Math.random()>x.p)return;const me=S.p[s]
 if(x.w=='t'&&ti>=0)add(1-s,ti,op.field[ti]);if(x.w=='s')add(s,ci,me.field[ci]);if(x.w=='e')op.field.forEach((c,i)=>add(1-s,i,c));if(x.w=='a')me.field.forEach((c,i)=>add(s,i,c));if(L.length)ev.push({k:'sts',L})}
 
 function A(S,s,a,ev){if(S.over)return 0;const me=S.p[s],op=S.p[1-s],mine=S.cur==s;
-if(a.t=='draw'){if(!mine||me.did||me.drawn>=2||me.light<1||me.hand.length>=7)return 0;me.light--;draw(S,s);return fin(S,ev)}
+if(a.t=='draw'){if(S.tc<=1||!mine||me.did||me.drawn>=2||me.light<1||me.hand.length>=7)return 0;me.light--;draw(S,s);return fin(S,ev)}
 if(a.t=='play'){const cd=me.hand[a.i];if(!cd)return 0;
  if(cd.id=='ts'){if(me.light<5)return 0;me.light-=5;op.skip=1;me.hand.splice(a.i,1);ev.push({k:'fx',s,t:'ts'});return fin(S,ev)}
  if(!mine)return 0;
@@ -124,7 +127,7 @@ if(a.t=='end'){me.field.forEach(c=>{for(const k in c.fx)if(--c.fx[k]<=0)delete c
 const c=me.field[a.c];if(!c||c.hp<=0||c.acted)return 0;
 if(a.t=='charge'){const v=gainL(c,2);c.acted=1;me.did=1;ev.push({k:'chg',s,i:a.c,v});return fin(S,ev)}
 if(a.t=='def'){c.st=DF[c.id];c.acted=1;me.did=1;ev.push({k:'def',s,i:a.c,d:c.st});return fin(S,ev)}
-if(a.t=='skill'){const k=sk(c.id,a.s);if(!k||c.light<k.c)return 0;const nm=C[c.id].s[a.s],pw=k.c+c.light+me.light;
+if(a.t=='skill'){const k=sk(c.id,a.s);if(!k||!SKS[CC[c.id]].includes(a.s)||c.light<k.c||(S.tc<=1&&k.t!='sup'))return 0;const nm=C[c.id].s[a.s],pw=k.c+c.light+me.light;
  if(k.t=='sup'){c.light-=k.c;c.acted=1;me.did=1;ev.push({k:'sup',s,i:a.c,nm});applyFx(S,s,a.c,X[c.id][2],-1,ev);return fin(S,ev)}
  if(k.t=='domain'){c.light-=k.c;c.acted=1;me.did=1;const od=S.dom[1-s];let ok=1;
   if(od){ok=pw>od.pw;ev.push({k:'clash',s,a:pw,b:od.pw,ok,nm,on:od.nm})}
@@ -248,13 +251,13 @@ function chH(s,i,c){const d=C[c.id],tg=U.t&&U.t.side==s&&c.hp>0,sel=U.c===i&&s==
 function info(s){const p=G.p[s];return `<span><b>P${s+1}${s==SEAT?' (คุณ)':''}</b> ${G.cur==s?'◀':''}</span><span>Light ${pips(p.light,p.maxL)}</span><span id=hp${s}>❤️${p.hp}/20</span>`}
 function render(){if(!G)return;const me=SEAT,op=1-me,my=G.cur==me&&!G.over;
 $('#opi').innerHTML=info(op);
-$('#mei').innerHTML=info(me)+`<span><button id=bd ${my&&!G.p[me].did&&G.p[me].drawn<2&&G.p[me].light>=1&&G.p[me].hand.length<7?'':'disabled'} data-a=draw>จั่ว</button> <button id=en ${my?'':'disabled'} data-a=end>จบเทิร์น</button></span>`;
+$('#mei').innerHTML=info(me)+`<span><button id=bd ${my&&G.tc>1&&!G.p[me].did&&G.p[me].drawn<2&&G.p[me].light>=1&&G.p[me].hand.length<7?'':'disabled'} data-a=draw>จั่ว</button> <button id=en ${my?'':'disabled'} data-a=end>จบเทิร์น</button></span>`;
 $('#of').innerHTML=G.p[op].field.map((c,i)=>chH(op,i,c)).join('')||'<small>— ว่าง —</small>';
 $('#mf').innerHTML=G.p[me].field.map((c,i)=>chH(me,i,c)).join('')||'<small>— ว่าง —</small>';
 const dm=[0,1].map(s=>G.dom[s]?`<span class=dm2>🌌 ${G.dom[s].nm} (${s==me?'คุณ':'ศัตรู'}) ${G.dom[s].t}t · ${G.dom[s].pw}</span>`:'').join('');
 $('#mid').innerHTML=`<div>รอบ ${Math.ceil(G.tc/2)} · ${G.mode=='dmg'?'Damage Race':'KO'} · ${my?'<b style="color:var(--b)">ตาของคุณ</b>':'ตาศัตรู'} · ⏱ <b id=tm>${Math.max(0,Math.ceil((DL-Date.now())/1000))}s</b> ${dm}</div>`;
 const c=U.c!=null&&my?G.p[me].field[U.c]:null;
-$('#act').innerHTML=c?`<button data-a=pc class="${U.p=='pc'?'pri':''}">⚡ Charge</button><button data-a=pd class="${U.p=='pd'?'pri':''}">${DN[DF[c.id]]}</button>`+SK.map((k0,i)=>{const k=sk(c.id,i);return `<button data-a=p${i} class="${U.p=='p'+i?'pri':''}" ${c.light>=k.c?'':'style="opacity:.5"'}>${TN[k.t]} ${C[c.id].s[i]}</button>`}).join(''):'<small>เลือกตัวละครของคุณเพื่อสั่งการ</small>';
+$('#act').innerHTML=c?`<button data-a=pc class="${U.p=='pc'?'pri':''}">⚡ Charge</button><button data-a=pd class="${U.p=='pd'?'pri':''}">${DN[DF[c.id]]}</button>`+SKS[CC[c.id]].map(i=>{const k=sk(c.id,i);return `<button data-a=p${i} class="${U.p=='p'+i?'pri':''}" ${c.light>=k.c?'':'style="opacity:.5"'}>${TN[k.t]} ${C[c.id].s[i]}</button>`}).join(''):'<small>เลือกตัวละครของคุณเพื่อสั่งการ</small>';
 $('#dc').innerHTML=c&&U.p?`<div class=dbg data-a=close></div><div class=dcard style="--c:${C[c.id].col}"><div class=em>${C[c.id].e}</div><div>${desc(c,U.p)}</div><div class=bt><button class=pri data-a=use>ใช้</button> <button data-a=close>ปิด</button></div></div>`:'';
 $('#hand').innerHTML=G.p[me].hand.map((h,i)=>{if(h.k=='c'){const d=C[h.id];return `<div class="cd ${G.p[me].light>=CC[h.id]?'':'no'}" data-h=${i} style="--c:${d.col}"><div class=em>${d.e}</div><b>${d.n}</b><small>✦${CC[h.id]}</small></div>`}else{return `<div class="cd e ${G.p[me].light>=E[h.id].c?'':'no'}" data-h=${i}><div class=em>${E[h.id].e}</div><b>${E[h.id].n}</b><small>✦${E[h.id].c}</small></div>`}}).join('')}
 
@@ -267,12 +270,13 @@ if(b){const v=b.dataset.a;
  if(v=='close'){U.p=null;render();return}
  if(v=='pc'||v=='pd'||/^p\d$/.test(v)){U.p=v;render();return}
  if(v=='use'){const p=U.p,c=U.c,c0=G.p[me].field[c];if(!c0||!p)return;
-  if(p=='pc'){U={};doAct({t:'charge',c})}
-  else if(p=='pd'){U={};doAct({t:'def',c})}
+  if(p=='pc'){U={};$('#dc').innerHTML='';doAct({t:'charge',c})}
+  else if(p=='pd'){U={};$('#dc').innerHTML='';doAct({t:'def',c})}
   else{const n=+p[1],k=sk(c0.id,n);
    if(c0.light<k.c){toast('Light ตัวละครไม่พอ',800);return}
+   if(G.tc<=1&&k.t!='sup'){toast('เทิร์นแรกโจมตีไม่ได้',800);return}
    if(['melee','bullet','ult'].includes(k.t)&&G.p[op].field.some(x=>x.hp>0)){U={t:{a:{t:'skill',c,s:n},side:op}};render();toast('เลือกเป้าหมาย',800)}
-   else{U={};doAct({t:'skill',c,s:n})}}
+   else{U={};$('#dc').innerHTML='';doAct({t:'skill',c,s:n})}}
   return}}
 if(cd){const hi=+cd.dataset.h,h=G.p[me].hand[hi];if(!h)return;
  if(h.id=='ts'){U={};doAct({t:'play',i:hi});return}
