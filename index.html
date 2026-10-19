@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Anime Card Fight</title>
-<!-- PeerJS สำหรับ Multiplayer (P2P) -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Anime Card Fight</title>
+<!-- PeerJS for Multiplayer (P2P) -->
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <style>
 :root{--bg:#0c0a1a;--p:#171335;--t:#f2efff;--m:#9a93c9;--a:#ff3d81;--b:#35e0ff;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--t);font:14px system-ui,'Noto Sans Thai',sans-serif;overflow:hidden}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--t);font:14px system-ui,sans-serif;overflow:hidden}
 button{font:inherit;color:var(--t);background:#2a2460;border:1px solid #4a42a0;border-radius:8px;padding:8px 12px;cursor:pointer}button:hover:not(:disabled){background:#3a3290}button:disabled{opacity:.5;cursor:default}
 button.pri{background:linear-gradient(90deg,var(--a),#a83dff);border:0;font-weight:700}
 #menu{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center}
@@ -19,7 +19,7 @@ button.pri{background:linear-gradient(90deg,var(--a),#a83dff);border:0;font-weig
 .ch.dim{filter:saturate(.3) brightness(.7)}.ch.sel{border-color:var(--b);box-shadow:0 0 14px var(--b)}.ch.tgt{border-color:var(--a);box-shadow:0 0 14px var(--a);animation:pl .6s infinite alternate}
 .bar{height:6px;background:#0008;border-radius:3px;overflow:hidden;margin:3px 0}.bar i{display:block;height:100%;background:#4ade80;transition:width .4s}
 #mid{text-align:center;font-size:12px;color:var(--m);min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:2px}
-.dm2{display:inline-block;padding:2px 8px;border-radius:10px;background:#3b1b6b;color:#e9c8ff;margin:0 3px}
+.dm2{display:inline-block;padding:2px 8px;border-radius:10px;background:#3b1b6b;color:#e9c8ff;margin:0 3px;cursor:help}
 #act{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;min-height:0}
 #hand{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;min-height:104px}
 .cd{flex:0 0 86px;background:linear-gradient(160deg,var(--c,#555),#120f2c 80%);border:2px solid #fff3;border-radius:9px;padding:5px;text-align:center;cursor:pointer;font-size:11px}
@@ -52,16 +52,15 @@ button.pri{background:linear-gradient(90deg,var(--a),#a83dff);border:0;font-weig
 .wv{position:fixed;left:0;right:0;height:60px;z-index:30;pointer-events:none;background:linear-gradient(90deg,transparent,var(--b),#fff,var(--b),transparent);animation:wv .6s forwards}@keyframes wv{from{opacity:0}to{opacity:1}}
 .bgs{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;min-height:16px;margin-top:2px}
 .bg{font-size:11px;background:#0009;border-radius:8px;padding:0 5px;cursor:help}
-.dm2{cursor:help}
- #over{position:fixed;inset:0;z-index:60;background:#000c;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:44px;font-weight:900}
+#over{position:fixed;inset:0;z-index:60;background:#000c;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:44px;font-weight:900}
 </style></head><body>
 <div id="menu">
 <h1>⚔️ ANIME CARD FIGHT</h1>
-<div class="rules">Light +2 ต่อเทิร์น (สูงสุด 2→5) · จั่วได้ 2 ใบ/เทิร์น · ล้มศัตรูทั้งหมดเพื่อชนะ · มีระบบโดเมนและสกิลพิเศษ</div>
-<div><button id="m1" class="pri">โหมด KO</button> <button id="m2">โหมด Damage Race (8 รอบ)</button></div>
-<button id="bot" class="pri">🤖 เล่นกับ Bot</button>
-<button id="mk">🏠 สร้างห้อง</button>
-<div><input id="code" maxlength="6" placeholder="รหัสห้อง"> <button id="jn">เข้าห้อง</button></div>
+<div class="rules">Light +2 per turn (Max 2→5) · Draw 2 cards/turn · Defeat all enemies to win · Domain & Skill systems included</div>
+<div><button id="m1" class="pri">KO Mode</button> <button id="m2">Damage Race Mode (8 Rounds)</button></div>
+<button id="bot" class="pri">🤖 Vs Bot</button>
+<button id="mk">🏠 Create Room</button>
+<div><input id="code" maxlength="6" placeholder="Room Code"> <button id="jn">Join Room</button></div>
 <div id="st" style="color:var(--b)"></div></div>
 <div id="game">
 <div class="bar2" id="opi"></div><div class="row" id="of"></div>
@@ -69,7 +68,7 @@ button.pri{background:linear-gradient(90deg,var(--a),#a83dff);border:0;font-weig
 <div class="row" id="mf"></div>
 <div class="bar2" id="mei"></div><div id="act"></div><div id="hand"></div></div>
 <div id="dc"></div><div class="cut" id="cut"></div><div class="ban" id="ban"><div></div></div><div id="toast"></div>
-<div id="over"><span id="ot"></span><button class="pri" onclick="location.reload()">กลับเมนู</button></div>
+<div id="over"><span id="ot"></span><button class="pri" onclick="location.reload()">Main Menu</button></div>
 <script>
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms)),rnd=n=>Math.floor(Math.random()*n);
 const C={gj:{n:'Gojo',e:'🕶️',col:'#6d4bff',hp:20,atk:5,s:['Blue Strike','Red Burst','Unlimited Void','Hollow Purple','Maximum Blue']},
@@ -78,24 +77,28 @@ lf:{n:'Luffy',e:'🏴‍☠️',col:'#c93030',hp:26,atk:5,s:['Gum-Gum Pistol','G
 lv:{n:'Levi',e:'⚔️',col:'#2f8f6b',hp:18,atk:7,s:['Blade Slash','Gas Burst Shot','Ackerman Focus','Cyclone Slash','Whirlwind Slash']},
 st:{n:'Saitama',e:'👊',col:'#c9a227',hp:30,atk:4,s:['Normal Punch','Consecutive Punches','Hero Aura','Serious Punch','Shockwave Punch']},
 gk:{n:'Goku',e:'🔥',col:'#2f7be8',hp:22,atk:6,s:['Kick Rush','Kamehameha','Ultra Instinct','Spirit Bomb','Energy Blast Rain']}};
+
+const SK=[{t:'melee',c:0,m:1},{t:'bullet',c:1,m:1.6},{t:'domain',c:2,m:0},{t:'ult',c:3,m:3.6},{t:'aoe',c:2,m:.9}],TN={melee:'👊',bullet:'✨',domain:'🌌',ult:'💥',sup:'🔆',aoe:'🌊'};
 const sk=(id,n)=>n==2&&id!='gj'?{t:'sup',c:1,m:0}:SK[n];
 const CC={gj:3,nr:2,lf:2,lv:1,st:3,gk:2};
- // ระดับการ์ด (ตามค่า light ที่ใช้วาง) → สกิลที่ใช้ได้ (index ของ SK)
-// 1 = 3 สกิล · 2 = 4 สกิล · 3 = 5 สกิล
 const SKS={1:[0,1,2],2:[0,1,2,3],3:[0,1,2,3,4]};
 const X={gj:[0,{w:'t',k:'down',n:2,p:.7},{w:'e',k:'stun',n:1,p:1},{w:'t',k:'stun',n:1,p:.5},{w:'e',k:'vuln',n:2,p:.6}],nr:[0,{w:'s',k:'up',n:2,p:1},{w:'a',k:'chup',n:3,p:1},{w:'t',k:'down',n:2,p:.5},{w:'e',k:'vuln',n:1,p:.6}],lf:[0,{w:'t',k:'down',n:1,p:.9},{w:'a',k:'chup',n:2,p:.9},{w:'t',k:'stun',n:1,p:.6},{w:'e',k:'vuln',n:2,p:.5}],lv:[0,{w:'s',k:'up',n:2,p:1},{w:'a',k:'chup',n:2,p:1},{w:'t',k:'down',n:1,p:.8},{w:'e',k:'vuln',n:1,p:.5}],st:[0,{w:'t',k:'down',n:1,p:.9},{w:'a',k:'chup',n:2,p:.9},{w:'t',k:'stun',n:1,p:.5},{w:'e',k:'vuln',n:3,p:.7}],gk:[0,{w:'s',k:'up',n:2,p:1},{w:'a',k:'chup',n:2,p:1},{w:'t',k:'down',n:2,p:.8},{w:'e',k:'vuln',n:1,p:.6}]};
 const DF={gj:'evade',nr:'counter',lf:'guard',lv:'evade',st:'guard',gk:'counter'};
+const DN={guard:'Guard',evade:'Evade',counter:'Counter'};
+const SN={stun:'Stun',down:'ATK Down',up:'ATK Up',chup:'Charge Up',chdn:'Charge Down',prot:'Protected',vuln:'Vulnerable',regen:'Regen'};
+const SD={stun:'Cannot take action on their turn',down:'Deals 50% less damage',up:'Deals 1.5x damage',chup:'Charges 1.5x more character Light',chdn:'Charges 50% less character Light',prot:'Takes 40% less damage',vuln:'Takes 50% more damage',regen:'Restores 3 HP at the start of each turn'};
+const ED={heal:'Restore +8 HP to chosen character',pow:'Gain permanent +2 ATK on chosen character',slot:'Expand character slots by +1',ts:'Skip enemy turn · Usable anytime even outside your turn',regen:'Target character regens 3 HP per turn for 3 turns',focus:'Gain +2 Light next turn (Can exceed cap)',shield:'Chosen character takes 40% less damage for 3 turns',cell:'Gain +2 Light on chosen character'};
+
 const CK=Object.keys(C),E={heal:{n:'Healing Light',e:'💖',c:1,tg:1},pow:{n:'Power Up',e:'💪',c:1,tg:1},slot:{n:'Slot Expand',e:'🟦',c:1,tg:0},ts:{n:'Time Stop',e:'⏳',c:5,tg:0},regen:{n:'Regenerate',e:'💚',c:1,tg:1},focus:{n:'Focus',e:'🧘',c:1,tg:0},shield:{n:'Shield',e:'🔰',c:1,tg:1},cell:{n:'Cell',e:'🔋',c:1,tg:1}};
-const SK=[{t:'melee',c:0,m:1},{t:'bullet',c:1,m:1.6},{t:'domain',c:2,m:0},{t:'ult',c:3,m:3.6},{t:'aoe',c:2,m:.9}],TN={melee:'👊',bullet:'✨',domain:'🌌',ult:'💥',sup:'🔆',aoe:'🌊'};
 const rc=()=>Math.random()<.55?{k:'c',id:CK[rnd(6)]}:{k:'e',id:['heal','pow','slot','ts','heal','pow','regen','focus','shield','cell'][rnd(10)]};
 const ch=id=>({id,hp:C[id].hp,mhp:C[id].hp,atk:C[id].atk,light:0,acted:0,st:null,fx:{}});
 const mkp=()=>({hand:[{k:'c',id:['nr','lf','lv','gk'][rnd(4)]},{k:'c',id:CK[rnd(6)]},rc(),rc()],light:0,maxL:2,drawn:0,did:0,skip:0,field:[],slots:4,dmg:0,played:0,hp:20,mhp:20});
 
-/* ---------- engine (host only) ---------- */
+/* ---------- Engine (Host Only) ---------- */
 function draw(S,s){const p=S.p[s];if(p.hand.length<7){p.hand.push(rc());p.drawn++}}
 function hit(S,s,i,d,ev){const c=S.p[s].field[i];if(c.hp<=0)return;c.hp-=d;S.p[s].dmg+=d;if(c.hp<=0)ev.push({k:'ko',s,i})}
 function startTurn(S,s,ev){const p=S.p[s];S.tc++;
-if(p.skip){p.skip=0;ev.push({k:'txt',t:`⏳ P${s+1} ถูกหยุดเวลา! ข้ามเทิร์น`});return startTurn(S,1-s,ev)}
+if(p.skip){p.skip=0;ev.push({k:'txt',t:`⏳ Player ${s+1} Time Stopped! Turn skipped.`});return startTurn(S,1-s,ev)}
 S.cur=s;p.maxL=Math.min(5,1+Math.ceil(S.tc/2));const b=p.bonus||0;p.bonus=0;p.light=Math.min(p.maxL+b,p.light+2+b);p.did=0;p.drawn=0;
 p.field.forEach((c,i)=>{c.acted=0;c.st=null;if(c.fx.stun>0)c.acted=1;if(c.fx.regen>0)c.hp=Math.min(c.mhp,c.hp+3); if(c.pc){c.pc=0;if(c.hp>0){const v=gainL(c,2);ev.push({k:'chg2',s,i,v})}}});
 ev.push({k:'turn',s});
@@ -116,13 +119,13 @@ if(a.t=='draw'){if(S.tc<=1||!mine||me.did||me.drawn>=2||me.light<1||me.hand.leng
 if(a.t=='play'){const cd=me.hand[a.i];if(!cd)return 0;
  if(cd.id=='ts'){if(me.light<5)return 0;me.light-=5;op.skip=1;me.hand.splice(a.i,1);ev.push({k:'fx',s,t:'ts'});return fin(S,ev)}
  if(!mine)return 0;
- if(cd.k=='c'){if(me.field.length>=me.slots||me.light<CC[cd.id])return 0;me.light-=CC[cd.id];me.field.push(ch(cd.id));me.played=1;me.hand.splice(a.i,1);me.did=1;ev.push({k:'txt',t:`🃏 P${s+1} วาง ${C[cd.id].n}`});return fin(S,ev)}
+ if(cd.k=='c'){if(me.field.length>=me.slots||me.light<CC[cd.id])return 0;me.light-=CC[cd.id];me.field.push(ch(cd.id));me.played=1;me.hand.splice(a.i,1);me.did=1;ev.push({k:'txt',t:`🃏 P${s+1} deployed ${C[cd.id].n}`});return fin(S,ev)}
  const d=E[cd.id];if(me.light<d.c)return 0;
  if(d.tg){const c=me.field[a.tg];if(!c||c.hp<=0)return 0;
   if(cd.id=='heal')c.hp=Math.min(c.mhp,c.hp+8);else if(cd.id=='pow')c.atk+=2;else if(cd.id=='regen')c.fx.regen=3;else if(cd.id=='shield')c.fx.prot=Math.max(c.fx.prot||0,3);else if(cd.id=='cell')c.light=Math.min(5,c.light+2);
   ev.push({k:'fx',s,i:a.tg,t:cd.id});me.light-=d.c;me.hand.splice(a.i,1);me.did=1;return fin(S,ev)}
- if(cd.id=='focus'){me.bonus=2;ev.push({k:'txt',t:`🧘 P${s+1} โฟกัส เทิร์นหน้า light +2`})}
- else if(cd.id=='slot'){me.slots++;ev.push({k:'txt',t:`➕ P${s+1} +1 ช่อง`})}
+ if(cd.id=='focus'){me.bonus=2;ev.push({k:'txt',t:`🧘 P${s+1} Focus: Light +2 next turn`})}
+ else if(cd.id=='slot'){me.slots++;ev.push({k:'txt',t:`➕ P${s+1} Slot +1`})}
  else return 0;
  me.light-=d.c;me.hand.splice(a.i,1);me.did=1;return fin(S,ev)}
 if(!mine)return 0;
@@ -150,21 +153,21 @@ if(a.t=='skill'){const k=sk(c.id,a.s);if(!k||!SKS[CC[c.id]].includes(a.s)||c.lig
  applyFx(S,s,a.c,X[c.id][a.s],dir?-1:a.tg,ev);return fin(S,ev)}
 return 0}
 
-/* ---------- host / network ---------- */
+/* ---------- Network / Bot Host ---------- */
 let G=null,S=null,SEAT=0,HOST=true,BOT=false,MODE='ko',busy=false,Q=[],U={},last=null;
 let peer=null,conn=null;
-function startGame(){S={mode:MODE,tc:0,cur:0,over:null,p:[mkp(),mkp()],dom:[null,null]};const ev=[];startTurn(S,rnd(2),ev);commit([]);$('#menu').style.display='none';$('#game').style.display='flex';toast(S.cur==SEAT?'🎲 คุณได้เริ่มก่อน!':'🎲 ศัตรูเริ่มก่อน',1500);}
+function startGame(){S={mode:MODE,tc:0,cur:0,over:null,p:[mkp(),mkp()],dom:[null,null]};const ev=[];startTurn(S,rnd(2),ev);commit([]);$('#menu').style.display='none';$('#game').style.display='flex';toast(S.cur==SEAT?'🎲 You start first!':'🎲 Enemy starts first!',1500);}
 async function commit(ev){const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();if(conn&&conn.open)conn.send({t:'st',d:last});await recv(snap,ev);if(BOT&&S.cur==1&&!S.over)bot()}
 let DL=0,TT=0,TC=-1,TC2=-1;
 setInterval(()=>{const t=$('#tm');if(!t||!G||G.over)return;const s=Math.max(0,Math.ceil((DL-Date.now())/1000));t.textContent=s+'s';t.style.color=s<=15?'#ff5a5a':''},250);
-function tm(){if(!HOST)return;if(S.over){clearTimeout(TT);return}if(S.tc===TC)return;TC=S.tc;clearTimeout(TT);if(BOT&&S.cur==1)return;TT=setTimeout(()=>{if(S.tc===TC&&!S.over)hostApply(S.cur,{t:'end'})},90000)}}
+function tm(){if(!HOST)return;if(S.over){clearTimeout(TT);return}if(S.tc===TC)return;TC=S.tc;clearTimeout(TT);if(BOT&&S.cur==1)return;TT=setTimeout(()=>{if(S.tc===TC&&!S.over)hostApply(S.cur,{t:'end'})},90000)}
 function hostApply(s,a){const ev=[];if(A(S,s,a,ev))commit(ev)}
 function doAct(a){if(HOST)hostApply(SEAT,a);else if(conn&&conn.open)conn.send({t:'do',d:a})}
 function recv(s2,ev){return new Promise(res=>{Q.push([s2,ev,res]);pump()})}
 async function pump(){if(busy)return;busy=true;while(Q.length){const[s2,ev,res]=Q.shift();
  if(G){for(const e of ev)await pe(e)}else{$('#menu').style.display='none';$('#game').style.display='flex'}
  G=s2;if(G.tc!==TC2){TC2=G.tc;DL=Date.now()+90000}render();
- if(G.over){$('#ot').textContent=G.over.w==-1?'เสมอ!':G.over.w==SEAT?'🏆 ชนะ!':'💀 แพ้…';$('#over').style.display='flex'}res()}busy=false}
+ if(G.over){$('#ot').textContent=G.over.w==-1?'DRAW!':G.over.w==SEAT?'🏆 VICTORY!':'💀 DEFEAT...';$('#over').style.display='flex'}res()}busy=false}
 
 async function bot(){await sleep(900);const p=S.p[1],o=S.p[0];
 const go=async a=>{if(S.over||S.cur!=1)return 0;const ev=[];if(!A(S,1,a,ev))return 0;await commit0(ev);return 1};
@@ -184,40 +187,40 @@ async function commit0(ev){const snap=JSON.parse(JSON.stringify(S));last={S:snap
 
 function online(code,isHost){
  BOT=false;HOST=isHost;SEAT=isHost?0:1;
- if(typeof Peer=='undefined'){$('#st').textContent='โหลด PeerJS ไม่ได้ (อาจถูกบล็อก) ลองเล่นกับ Bot แทน';return}
- $('#st').textContent='กำลังเชื่อมต่อระบบเครือข่าย...';
+ if(typeof Peer=='undefined'){$('#st').textContent='PeerJS failed to load. Try playing vs Bot.';return}
+ $('#st').textContent='Connecting to network...';
  if(peer)peer.destroy();
  const roomCode='acf-'+code;
  if(isHost){
   peer=new Peer(roomCode);
-  peer.on('open',()=>{$('#st').textContent='สร้างห้องสำเร็จ! รหัสห้อง: '+code+' (รอเพื่อนเข้าห้อง...)'});
-  peer.on('connection',c=>{conn=c;$('#st').textContent='เพื่อนเชื่อมต่อแล้ว! กำลังเริ่มเกม...';
+  peer.on('open',()=>{$('#st').textContent='Room Created! Code: '+code+' (Waiting for opponent...)'});
+  peer.on('connection',c=>{conn=c;$('#st').textContent='Opponent connected! Starting game...';
    conn.on('data',msg=>{if(msg.t==='do'&&S)hostApply(1,msg.d)});
    setTimeout(()=>startGame(),1000)});
-  peer.on('error',err=>{$('#st').textContent=err.type==='unavailable-id'?'รหัสห้องนี้ถูกใช้ไปแล้ว กรุณากดสร้างใหม่':'เกิดข้อผิดพลาด: '+err.type});
+  peer.on('error',err=>{$('#st').textContent=err.type==='unavailable-id'?'Room code in use. Try again':'Error: '+err.type});
  }else{
   peer=new Peer();
-  peer.on('open',()=>{$('#st').textContent='กำลังเข้าห้อง '+code+'...';
+  peer.on('open',()=>{$('#st').textContent='Joining Room '+code+'...';
    conn=peer.connect(roomCode);
-   conn.on('open',()=>{$('#st').textContent='เข้าห้องสำเร็จ! รอโฮสต์เริ่มเกม...'});
+   conn.on('open',()=>{$('#st').textContent='Joined Room! Waiting for host...'});
    conn.on('data',msg=>{if(msg.t==='st')recv(msg.d.S,msg.d.ev)})});
-  peer.on('error',()=>{$('#st').textContent='ไม่พบห้องรหัสนี้ หรือการเชื่อมต่อล้มเหลว'});
+  peer.on('error',()=>{$('#st').textContent='Room not found or connection failed'});
  }}
 
-/* ---------- animation ---------- */
+/* ---------- Animation ---------- */
 const el=(s,i)=>i<0?$(s==SEAT?'#mei':'#opi'):$('#c'+s+'_'+i);
 function toast(t,ms=900){$('#toast').innerHTML=`<span>${t}</span>`;return sleep(ms)}
 function fl(node,t,col,ms=900){if(!node)return;const r=node.getBoundingClientRect(),d=document.createElement('div');d.className='fl';d.textContent=t;d.style.cssText=`left:${r.left+r.width/2-20}px;top:${r.top-20}px;color:${col||'#fff'}`;document.body.append(d);setTimeout(()=>d.remove(),ms)}
 async function banner(t,col,ms=1400){const b=$('#ban');b.style.setProperty('--c',col);b.firstChild.innerHTML=t;b.className='ban on';await sleep(ms);b.className='ban'}
 function hpUpd(s,i,hp){const c=G.p[s].field[i],n=el(s,i);if(!c||!n)return;c.hp=Math.max(0,hp);n.querySelector('.bar i').style.width=(c.hp/c.mhp*100)+'%';n.querySelector('.bar i').style.background=c.hp>c.mhp*.5?'#4ade80':'#ffb86b';n.querySelector('.em').style.opacity=c.hp>0?1:.3}
 async function cut(e){const A=G.p[e.s].field[e.i],T=e.ti>=0?G.p[e.ts].field[e.ti]:null,a=C[A.id],t=T?C[T.id]:{n:'Player '+(e.ts+1),e:'🧑',col:'#666'},o=$('#cut');o.style.setProperty('--c',a.col);o.style.setProperty('--c2',t.col);
- o.innerHTML=`<div class="h L"><div class=big>${a.e}</div><div class=nm>${a.n}${e.s==SEAT?'':' (ศัตรู)'}<br>⚔️ ${A.atk}</div></div><div class="h R"><div class=big>${t.e}</div><div class=nm>${t.n}${e.ts==SEAT?'':' (ศัตรู)'}<br>⚔️ ${T?T.atk:'-'}</div></div><div class=ttl>${e.nm}</div><div class=fl2></div><div class=dm>-${e.dmg}</div>`;
+ o.innerHTML=`<div class="h L"><div class=big>${a.e}</div><div class=nm>${a.n}${e.s==SEAT?'':' (Enemy)'}<br>⚔️ ${A.atk}</div></div><div class="h R"><div class=big>${t.e}</div><div class=nm>${t.n}${e.ts==SEAT?'':' (Enemy)'}<br>⚔️ ${T?T.atk:'-'}</div></div><div class=ttl>${e.nm}</div><div class=fl2></div><div class=dm>-${e.dmg}</div>`;
  o.className='cut in';await sleep(1400);o.classList.add('go');await sleep(1100);o.className='cut'}
 async function pe(e){const me=SEAT;
-if(e.k=='turn'){await toast(e.s==me?'⚡ ตาของคุณ':'⏳ ตาศัตรู',700)}
+if(e.k=='turn'){await toast(e.s==me?'⚡ Your Turn':'⏳ Enemy Turn',700)}
 else if(e.k=='txt')await toast(e.t,900);
-else if(e.k=='fx'){if(e.t=='ts'){await banner('⏳ TIME STOP ⏳','#35e0ff')}else{fl(el(e.s,e.i),({heal:'+8 💖',regen:'💚 Regen',shield:'🔰 Protection',pow:'💪 ATK +2',cell:'🔋 +2'})[e.t]||'✨','#4ade80');await sleep(600)}}
-else if(e.k=='chg'){if(e.s==me){const n=el(e.s,e.i);fl(n,'⚡ ชาร์จ (รอเทิร์นหน้า)','#35e0ff');await sleep(600)}}
+else if(e.k=='fx'){if(e.t=='ts'){await banner('⏳ TIME STOP ⏳','#35e0ff')}else{fl(el(e.s,e.i),({heal:'+8 💖',regen:'💚 Regen',shield:'🔰 Protected',pow:'💪 ATK +2',cell:'🔋 +2'})[e.t]||'✨','#4ade80');await sleep(600)}}
+else if(e.k=='chg'){if(e.s==me){const n=el(e.s,e.i);fl(n,'⚡ Charging (Next Turn)','#35e0ff');await sleep(600)}}
 else if(e.k=='chg2'){const n=el(e.s,e.i);fl(n,'⚡ +'+e.v,'#35e0ff');n&&n.animate([{filter:'brightness(1)'},{filter:'brightness(2.5) drop-shadow(0 0 14px #35e0ff)'},{filter:'brightness(1)'}],{duration:700});await sleep(600)}
 else if(e.k=='def'){if(e.s==me){const n=el(e.s,e.i);fl(n,({guard:'🛡 GUARD',evade:'💨 EVADE',counter:'🗡 COUNTER'})[e.d],'#fff');await sleep(700)}}
 else if(e.k=='ctr'){const t=el(e.s,e.i),a=el(e.ts,e.ti);await toast('🗡 COUNTER!',500);if(!t||!a)return;const ar=t.getBoundingClientRect(),tr=a.getBoundingClientRect();t.style.zIndex=5;t.animate([{transform:'none'},{transform:`translate(${tr.left-ar.left}px,${tr.top-ar.top}px) scale(1.05)`},{transform:'none'}],{duration:420});await sleep(420);fl(a,'-'+e.dmg,'#ff5a5a');t.style.zIndex=''}
@@ -228,7 +231,7 @@ else if(e.k=='aoe'){const a=el(e.s,e.i);a&&a.animate([{transform:'none'},{transf
 else if(e.k=='sup'){const n=el(e.s,e.i);fl(n,'✨ '+e.nm,'#ffd23d');n&&n.animate([{filter:'none'},{filter:'brightness(2) drop-shadow(0 0 14px #ffd23d)'},{filter:'none'}],{duration:700});await sleep(750)}
 else if(e.k=='sts'){for(const o of e.L)fl(el(o.s,o.i),SN[o.k]||o.k,'#ffd23d');await sleep(850)}
 else if(e.k=='dot'){const n=el(e.s,e.i);fl(n,'-'+e.d,'#c77dff');n&&n.animate([{transform:'none'},{transform:'translateX(5px)'},{transform:'none'}],{duration:200});if(e.i>=0)hpUpd(e.s,e.i,G.p[e.s].field[e.i].hp-e.d);await sleep(300)}
-else if(e.k=='clash'){await banner(`⚔️ DOMAIN CLASH ⚔️<br>${e.s==me?'คุณ':'ศัตรู'} ${e.a} VS ${e.b}<br>${e.ok?'ชนะ!':'แพ้…'}`,'#ff3d81',2000)}
+else if(e.k=='clash'){await banner(`⚔️ DOMAIN CLASH ⚔️<br>${e.s==me?'You':'Enemy'} ${e.a} VS ${e.b}<br>${e.ok?'WIN!':'LOST…'}`,'#ff3d81',2000)}
 else if(e.k=='dom'){if(e.ok)await banner('🌌 DOMAIN EXPANSION 🌌<br>'+e.nm,e.s==me?'#35e0ff':'#ff3d81',1600)}
 else if(e.k=='ko'){const n=el(e.s,e.i);n&&n.animate([{opacity:1},{opacity:.1,transform:'translateY(20px) rotate(10deg)',filter:'grayscale(1)'}],{duration:700,fill:'forwards'});await sleep(700)}
 else if(e.k=='atk'){if(e.t=='ult')await cut(e);const a=el(e.s,e.i),t=el(e.ts,e.ti);if(!a||!t)return;
@@ -242,9 +245,7 @@ else if(e.k=='atk'){if(e.t=='ult')await cut(e);const a=el(e.s,e.i),t=el(e.ts,e.t
   const x=document.createElement('div');x.className='fl';x.textContent=e.t=='ult'?'💥':'💢';x.style.cssText=`left:${tr.left+tr.width/2-20}px;top:${tr.top+30}px;font-size:56px`;document.body.append(x);setTimeout(()=>x.remove(),800);
   await sleep(450)}}
 }
-SN.regen='💚 Regen';
-const SD={stun:'ทำอะไรไม่ได้ในเทิร์นของตัวเอง',down:'ดาเมจที่ทำได้ลดลงครึ่งหนึ่ง',up:'ดาเมจที่ทำได้ x1.5',chup:'Charge ได้ light มากขึ้น x1.5',chdn:'Charge ได้ light น้อยลงครึ่งหนึ่ง',prot:'รับดาเมจน้อยลง 40%',vuln:'รับดาเมจมากขึ้น 50%',regen:'ฟื้น 3 HP ทุกต้นเทิร์น'};
-const ED={heal:'ฟื้น HP ตัวละครที่เลือก +8',pow:'เพิ่ม ATK ตัวละครที่เลือก +2 ถาวร',slot:'เพิ่มช่องวางตัวละคร +1',ts:'ข้ามเทิร์นถัดไปของศัตรู · ใช้ได้ทุกเมื่อแม้ไม่ใช่ตาของคุณ',regen:'ตัวละครที่เลือกฟื้น 3 HP ต้นเทิร์น เป็นเวลา 3 เทิร์น',focus:'เทิร์นหน้าได้ light เพิ่ม +2 (เกินเพดานได้)',shield:'ตัวละครที่เลือกรับดาเมจน้อยลง 40% เป็นเวลา 3 เทิร์น',cell:'light ของตัวละครที่เลือก +2'};
+
 const strip=h=>h.replace(/<br>/g,' · ').replace(/<[^>]+>/g,'');
 function hideDc(){$('#dc').innerHTML=''}
 function hd(h){if(h.k=='e'){const d=E[h.id];return `<div class=em>${d.e}</div><div><b>${d.n}</b> · ✦${d.c}<br>${ED[h.id]}</div>`}
@@ -252,81 +253,88 @@ function hd(h){if(h.k=='e'){const d=E[h.id];return `<div class=em>${d.e}</div><d
 function tip(c){const d=C[c.id];
  return `${d.n} ❤️${c.hp}/${c.mhp} ⚔️${c.atk} ✦${c.light}&#10;`+SKS[CC[c.id]].map(i=>strip(desc(c,'p'+i))).join('&#10;')+Object.keys(c.fx).map(k=>`&#10;${SN[k]} (${c.fx[k]}): ${SD[k]}`).join('')}
 function desc(c,p){const d=C[c.id];
-if(p=='pc'){let m=2;if(c.fx.chup>0)m=Math.ceil(m*1.5);if(c.fx.chdn>0)m=Math.floor(m/2);return '<b>⚡ Charge</b> · ได้ light ตัวละคร +'+m+' (สูงสุด 5)'}
-if(p=='pd'){const df=DF[c.id];return `<b>${DN[df]}</b> · `+{guard:'ลดดาเมจ Melee/Bullet ลงครึ่งหนึ่งจนถึงต้นเทิร์นหน้า',evade:'มีโอกาสหลบ Melee/Bullet',counter:'ตอบโต้เมื่อถูก Melee/Bullet'}[df]}
+if(p=='pc'){let m=2;if(c.fx.chup>0)m=Math.ceil(m*1.5);if(c.fx.chdn>0)m=Math.floor(m/2);return '<b>⚡ Charge</b> · Gain +'+m+' Light next turn (Max 5)'}
+if(p=='pd'){const df=DF[c.id];return `<b>${DN[df]}</b> · `+{guard:'Reduce Melee/Bullet damage by 50% until next turn',evade:'Chance to evade Melee/Bullet attacks',counter:'Counter-attack when hit by Melee/Bullet'}[df]}
 const n=+p[1],k=sk(c.id,n),x=X[c.id][n],dm=Math.round(c.atk*k.m*(c.fx.up>0?1.5:1)*(c.fx.down>0?.5:1));
-const ty={melee:'Melee โจมตีระยะใกล้',bullet:'Bullet โจมตีระยะไกล',domain:'Domain อาณาเขต 3 เทิร์น ศัตรูโดนดาเมจทุกต้นเทิร์น',ult:'Ultimate โจมตีหนัก ไม่ติด Guard/Evade',sup:'Support เสริมพลัง',aoe:'AOE โจมตีศัตรูทุกตัว'};
-return `<b>${d.s[n]}</b> · ${ty[k.t]||''}<br>${k.t=='domain'||k.t=='sup'?'':'ดาเมจ <b>'+dm+'</b> · '}เสีย light ตัวละคร <b>${k.c}</b> (มี ${c.light})${x?`<br>ผล: ${SN[x.k]||x.k} (${Math.round(x.p*100)}%)`:''}`}
+const ty={melee:'Melee Close Attack',bullet:'Ranged Attack',domain:'Domain 3 Turns Damage over Time',ult:'Ultimate Attack (Ignores Guard/Evade)',sup:'Support Buff',aoe:'AOE All Targets Attack'};
+return `<b>${d.s[n]}</b> · ${ty[k.t]||''}<br>${k.t=='domain'||k.t=='sup'?'':'Damage <b>'+dm+'</b> · '}Cost <b>${k.c}</b> Light (Has ${c.light})${x?`<br>Effect: ${SN[x.k]\vert{}\vert{}x.k} (${Math.round(x.p*100)}%)`:''}`}
 
-/* ---------- render / input ---------- */
+/* ---------- Render & UI ---------- */
 const pips=(l,m)=>'✦'.repeat(l)+'<span style="opacity:.3">'+'✧'.repeat(Math.max(0,m-l))+'</span>';
 function chH(s,i,c){const d=C[c.id],tg=U.t&&U.t.side==s&&c.hp>0,sel=U.c===i&&s==SEAT;
-const bd=Object.keys(c.fx).map(k=>`<span class=bg title="${SN[k]}: ${SD[k]} (เหลือ ${c.fx[k]} เทิร์น)">${SN[k].split(' ')[0]}${c.fx[k]}</span>`).join('')+(s==SEAT&&c.st?`<span class=bg title="${DN[c.st]}">${DN[c.st].split(' ')[0]}</span>`:'')+(s==SEAT&&c.pc?`<span class=bg title="ชาร์จ: ได้ light +2 ต้นเทิร์นหน้า">⚡รอ</span>`:'');
+const bd=Object.keys(c.fx).map(k=>`<span class=bg title="${SN[k]}: ${SD[k]} (${c.fx[k]} turns left)">${SN[k].split(' ')[0]}${c.fx[k]}</span>`).join('')+(s==SEAT&&c.st?`<span class=bg title="${DN[c.st]}">${DN[c.st].split(' ')[0]}</span>`:'')+(s==SEAT&&c.pc?`<span class=bg title="Charge: Gain Light next turn">⚡Wait</span>`:'');
 return `<div class="ch ${c.acted?'dim':''} ${sel?'sel':''} ${tg?'tgt':''}" id="c${s}_${i}" style="--c:${d.col}" title="${tip(c)}"><div class="em">${d.e}</div><b>${d.n}</b><div class="bar"><i style="width:${c.hp/c.mhp*100}%"></i></div><small>❤️${c.hp} ⚔️${c.atk} ✦${c.light}</small><div class=bgs>${bd}</div></div>`}
-function info(s){const p=G.p[s];return `<span><b>P${s+1}${s==SEAT?' (คุณ)':''}</b> ${G.cur==s?'◀':''}</span><span>Light ${pips(p.light,p.maxL)}</span><span id=hp${s}>❤️${p.hp}/20</span>`}
+function info(s){const p=G.p[s];return `<span><b>P${s+1}${s==SEAT?' (You)':''}</b> ${G.cur==s?'◀':''}</span><span>Light ${pips(p.light,p.maxL)}</span><span id=hp${s}>❤️${p.hp}/20</span>`}
 function render(){if(!G)return;const me=SEAT,op=1-me,my=G.cur==me&&!G.over;
 $('#opi').innerHTML=info(op);
-$('#mei').innerHTML=info(me)+`<span><button id=bd ${my&&G.tc>1&&!G.p[me].did&&G.p[me].drawn<2&&G.p[me].light>=1&&G.p[me].hand.length<7?'':'disabled'} data-a=draw>จั่ว</button> <button id=en ${my?'':'disabled'} data-a=end>จบเทิร์น</button></span>`;
-$('#of').innerHTML=G.p[op].field.map((c,i)=>chH(op,i,c)).join('')||'<small>— ว่าง —</small>';
-$('#mf').innerHTML=G.p[me].field.map((c,i)=>chH(me,i,c)).join('')||'<small>— ว่าง —</small>';
-const dm=[0,1].map(s=>G.dom[s]?`<span class=dm2 title="${s==me?'ของคุณ':'ของศัตรู'} · ${G.dom[s].nm}&#10;เหลือ ${G.dom[s].t} เทิร์น · พลัง ${G.dom[s].pw}&#10;ต้นเทิร์นของเจ้าของ: ตัวละครฝ่ายตรงข้ามทุกตัวโดน 1 ดาเมจ (ถ้าไม่มีตัวละคร ผู้เล่นโดน 2)&#10;ถูกทับได้ถ้าอีกฝั่งเปิดโดเมนที่พลังสูงกว่า">🌌 ${G.dom[s].nm} (${s==me?'คุณ':'ศัตรู'}) ${G.dom[s].t}t · ${G.dom[s].pw}</span>`:'').join('');
-$('#mid').innerHTML=`<div>รอบ ${Math.ceil(G.tc/2)} · ${G.mode=='dmg'?'Damage Race':'KO'} · ${my?'<b style="color:var(--b)">ตาของคุณ</b>':'ตาศัตรู'} · ⏱ <b id=tm>${Math.max(0,Math.ceil((DL-Date.now())/1000))}s</b> ${dm}</div>`;
+$('#mei').innerHTML=info(me)+`<span><button id=bd ${my&&G.tc>1&&!G.p[me].did&&G.p[me].drawn<2&&G.p[me].light>=1&&G.p[me].hand.length<7?'':'disabled'} data-a=draw>Draw</button> <button id=en ${my?'':'disabled'} data-a=end>End Turn</button></span>`;
+$('#of').innerHTML=G.p[op].field.map((c,i)=>chH(op,i,c)).join('')||'<small>— Empty —</small>';
+$('#mf').innerHTML=G.p[me].field.map((c,i)=>chH(me,i,c)).join('')||'<small>— Empty —</small>';
+const dm=[0,1].map(s=>G.dom[s]?`<span class=dm2 title="${s==me?'Yours':'Enemy\'s'} · ${G.dom[s].nm}&#10;${G.dom[s].t} turns left · Power ${G.dom[s].pw}">🌌 ${G.dom[s].nm} (${s==me?'You':'Enemy'}) ${G.dom[s].t}t · ${G.dom[s].pw}</span>`:'').join('');
+$('#mid').innerHTML=`<div>Round ${Math.ceil(G.tc/2)} · ${G.mode=='dmg'?'Damage Race':'KO'} · ${my?'<b style="color:var(--b)">Your Turn</b>':'Enemy Turn'} · ⏱ <b id=tm>${Math.max(0,Math.ceil((DL-Date.now())/1000))}s</b> ${dm}</div>`;
 const c=U.c!=null&&my?G.p[me].field[U.c]:null;
-$('#act').innerHTML=c?`<button data-a=pc class="${U.p=='pc'?'pri':''}">⚡ Charge</button><button data-a=pd class="${U.p=='pd'?'pri':''}">${DN[DF[c.id]]}</button>`+SKS[CC[c.id]].map(i=>{const k=sk(c.id,i);return `<button data-a=p${i} class="${U.p=='p'+i?'pri':''}" ${c.light>=k.c?'':'style="opacity:.5"'}>${TN[k.t]} ${C[c.id].s[i]}</button>`}).join(''):'<small>เลือกตัวละครของคุณเพื่อสั่งการ</small>';
+$('#act').innerHTML=c?`<button data-a=pc class="${U.p=='pc'?'pri':''}">⚡ Charge</button><button data-a=pd class="${U.p=='pd'?'pri':''}">${DN[DF[c.id]]}</button>`+SKS[CC[c.id]].map(i=>{const k=sk(c.id,i);return `<button data-a=p${i} class="${U.p=='p'+i?'pri':''}" ${c.light>=k.c?'':'style="opacity:.5"'}>${TN[k.t]} ${C[c.id].s[i]}</button>`}).join(''):'<small>Select your character to command</small>';
 const hh=U.h!=null?G.p[me].hand[U.h]:null;
-$('#dc').innerHTML=c&&U.p?`<div class=dbg data-a=close></div><div class=dcard style="--c:${C[c.id].col}"><div class=em>${C[c.id].e}</div><div>${desc(c,U.p)}</div><div class=bt><button class=pri data-a=use>ใช้</button> <button data-a=close>ปิด</button></div></div>`:hh?`<div class=dbg data-a=close></div><div class=dcard style="--c:${hh.k=='c'?C[hh.id].col:'#35e0ff'}">${hd(hh)}<div class=bt><button class=pri data-a=use>${hh.k=='c'?'ลงการ์ด':'ใช้การ์ด'}</button> <button data-a=close>ปิด</button></div></div>`:'';
+$('#dc').innerHTML=c&&U.p?`<div class=dbg data-a=close></div><div class=dcard style="--c:${C[c.id].col}"><div class=em>${C[c.id].e}</div><div>${desc(c,U.p)}</div><div class=bt><button class=pri data-a=use>Use</button> <button data-a=close>Close</button></div></div>`:hh?`<div class=dbg data-a=close></div><div class=dcard style="--c:${hh.k=='c'?C[hh.id].col:'#35e0ff'}">${hd(hh)}<div class=bt><button class=pri data-a=use>${hh.k=='c'?'Deploy':'Use Card'}</button> <button data-a=close>Close</button></div></div>`:'';
 $('#hand').innerHTML=G.p[me].hand.map((h,i)=>{if(h.k=='c'){const d=C[h.id];return `<div class="cd ${G.p[me].light>=CC[h.id]?'':'no'}" data-h=${i} style="--c:${d.col}"><div class=em>${d.e}</div><b>${d.n}</b><small>✦${CC[h.id]}</small></div>`}else{return `<div class="cd e ${G.p[me].light>=E[h.id].c?'':'no'}" data-h=${i}><div class=em>${E[h.id].e}</div><b>${E[h.id].n}</b><small>✦${E[h.id].c}</small></div>`}}).join('')}
 
-document.addEventListener('click',e=>{if(busy||!G||G.over||!$('#game').offsetParent)return;
-const me=SEAT,op=1-me,my=G.cur==me,chE=e.target.closest('.ch'),cd=e.target.closest('.cd'),b=e.target.closest('[data-a]');
-let s,i;if(chE){[s,i]=chE.id.slice(1).split('_').map(Number)}
-if(U.t&&chE&&s==U.t.side&&G.p[s].field[i]&&G.p[s].field[i].hp>0){const a={...U.t.a,tg:i};U={};hideDc();doAct(a);return}
-if(b){const v=b.dataset.a;
- if(v=='draw'||v=='end'){U={};hideDc();doAct({t:v});return}
- if(v=='close'){U.p=null;U.h=null;render();return}
- if(v=='pc'||v=='pd'||/^p\d$/.test(v)){U.p=v;render();return}
- if(v=='use'){
-  if(U.h!=null){const hi=U.h,h=G.p[me].hand[hi];
-   if(!h){U={};render();return}
-   if(h.id=='ts'){U={};hideDc();doAct({t:'play',i:hi});return}
-   if(!my){toast('ยังไม่ถึงตาของคุณ',800);return}
-   if(h.k=='c'||!E[h.id].tg){U={};hideDc();doAct({t:'play',i:hi});return}
-   U={t:{a:{t:'play',i:hi},side:me}};render();toast('เลือกตัวละครเป้าหมาย',800);return}
-  const p=U.p,c=U.c,c0=G.p[me].field[c];if(!c0||!p)return;
-if(p=='pc'){let m=2;if(c.fx.chup>0)m=Math.ceil(m*1.5);if(c.fx.chdn>0)m=Math.floor(m/2);return '<b>⚡ Charge</b> · ได้ light ตัวละคร +'+m+' ตอนต้นเทิร์นหน้า (สูงสุด 5) · ศัตรูมองไม่ออกว่าชาร์จหรือตั้งรับ'}
-  else if(p=='pd'){U={};hideDc();doAct({t:'def',c})}
-  else{const n=+p[1],k=sk(c0.id,n);
-   if(c0.light<k.c){toast('Light ตัวละครไม่พอ',800);return}
-   if(G.tc<=1&&k.t!='sup'){toast('เทิร์นแรกโจมตีไม่ได้',800);return}
-   if(['melee','bullet','ult'].includes(k.t)&&G.p[op].field.some(x=>x.hp>0)){U={t:{a:{t:'skill',c,s:n},side:op}};render();toast('เลือกเป้าหมาย',800)}
-   else{U={};hideDc();doAct({t:'skill',c,s:n})}}
-  return}}
-if(cd){const hi=+cd.dataset.h;if(!G.p[me].hand[hi])return;U={h:hi};render();return}
-if(chE&&s==me&&my&&G.p[me].field[i]&&!G.p[me].field[i].acted){U={c:i};render();return}
-U={};render()});
-const me=SEAT,op=1-me,my=G.cur==me,chE=e.target.closest('.ch'),cd=e.target.closest('.cd'),b=e.target.closest('[data-a]');
-let s,i;if(chE){[s,i]=chE.id.slice(1).split('_').map(Number)}
-if(U.t&&chE&&s==U.t.side&&G.p[s].field[i]&&G.p[s].field[i].hp>0){const a={...U.t.a,tg:i};U={};doAct(a);return}
-if(b){const v=b.dataset.a;
- if(v=='draw'||v=='end'){U={};doAct({t:v});return}
- if(v=='close'){U.p=null;render();return}
- if(v=='pc'||v=='pd'||/^p\d$/.test(v)){U.p=v;render();return}
- if(v=='use'){const p=U.p,c=U.c,c0=G.p[me].field[c];if(!c0||!p)return;
-  if(p=='pc'){U={};$('#dc').innerHTML='';doAct({t:'charge',c})}
-  else if(p=='pd'){U={};$('#dc').innerHTML='';doAct({t:'def',c})}
-  else{const n=+p[1],k=sk(c0.id,n);
-   if(c0.light<k.c){toast('Light ตัวละครไม่พอ',800);return}
-   if(G.tc<=1&&k.t!='sup'){toast('เทิร์นแรกโจมตีไม่ได้',800);return}
-   if(['melee','bullet','ult'].includes(k.t)&&G.p[op].field.some(x=>x.hp>0)){U={t:{a:{t:'skill',c,s:n},side:op}};render();toast('เลือกเป้าหมาย',800)}
-   else{U={};$('#dc').innerHTML='';doAct({t:'skill',c,s:n})}}
-  return}}
-if(cd){const hi=+cd.dataset.h,h=G.p[me].hand[hi];if(!h)return;
- if(h.id=='ts'){U={};doAct({t:'play',i:hi});return}
- if(!my)return;
- if(h.k=='c'||!E[h.id].tg){U={};doAct({t:'play',i:hi});return}
- U={t:{a:{t:'play',i:hi},side:me}};render();return}
-if(chE&&s==me&&my&&G.p[me].field[i]&&!G.p[me].field[i].acted){U={c:i};render();return}
-U={};render()});
+/* ---------- Global Fixed Click Event Listener ---------- */
+document.addEventListener('click',e=>{
+ if(busy||!G||G.over||!$('#game').offsetParent)return;
+ const me=SEAT,op=1-me,my=G.cur==me,chE=e.target.closest('.ch'),cd=e.target.closest('.cd'),b=e.target.closest('[data-a]');
+ let s,i;if(chE){[s,i]=chE.id.slice(1).split('_').map(Number)}
+ 
+ // Target Selection Mode
+ if(U.t&&chE&&s==U.t.side&&G.p[s].field[i]&&G.p[s].field[i].hp>0){
+  const a={...U.t.a,tg:i};U={};hideDc();doAct(a);return;
+ }
+ 
+ // Modal / Action buttons
+ if(b){
+  const v=b.dataset.a;
+  if(v=='draw'||v=='end'){U={};hideDc();doAct({t:v});return}
+  if(v=='close'){U.p=null;U.h=null;render();return}
+  if(v=='pc'||v=='pd'||/^p\d$/.test(v)){U.p=v;render();return}
+  if(v=='use'){
+   if(U.h!=null){
+    const hi=U.h,h=G.p[me].hand[hi];
+    if(!h){U={};render();return}
+    if(h.id=='ts'){U={};hideDc();doAct({t:'play',i:hi});return}
+    if(!my){toast('Not your turn yet',800);return}
+    if(h.k=='c'||!E[h.id].tg){U={};hideDc();doAct({t:'play',i:hi});return}
+    U={t:{a:{t:'play',i:hi},side:me}};render();toast('Select target character',800);return;
+   }
+   const p=U.p,c=U.c,c0=G.p[me].field[c];if(!c0||!p)return;
+   if(p=='pc'){U={};hideDc();doAct({t:'charge',c});return}
+   else if(p=='pd'){U={};hideDc();doAct({t:'def',c});return}
+   else{
+    const n=+p[1],k=sk(c0.id,n);
+    if(c0.light<k.c){toast('Not enough character Light',800);return}
+    if(G.tc<=1&&k.t!='sup'){toast('Cannot attack on Turn 1',800);return}
+    if(['melee','bullet','ult'].includes(k.t)&&G.p[op].field.some(x=>x.hp>0)){
+     U={t:{a:{t:'skill',c,s:n},side:op}};render();toast('Select target enemy',800);
+    }else{
+     U={};hideDc();doAct({t:'skill',c,s:n});
+    }
+    return;
+   }
+  }
+ }
+ 
+ // Selecting Card in hand
+ if(cd){
+  const hi=+cd.dataset.h;if(G.p[me].hand[hi]!==undefined){U={h:hi};render();}
+  return;
+ }
+ 
+ // Selecting Character on field
+ if(chE&&s==me&&my&&G.p[me].field[i]&&!G.p[me].field[i].acted){
+  U={c:i};render();return;
+ }
+ 
+ U={};render();
+});
+
 $('#m1').onclick=()=>{MODE='ko';$('#m1').className='pri';$('#m2').className=''};
 $('#m2').onclick=()=>{MODE='dmg';$('#m2').className='pri';$('#m1').className=''};
 $('#bot').onclick=()=>{BOT=true;HOST=true;SEAT=0;startGame()};
