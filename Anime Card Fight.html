@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Anime Card Fight</title>
+<style>
+:root{--bg:#0c0a1a;--p:#171335;--t:#f2efff;--m:#9a93c9;--a:#ff3d81;--b:#35e0ff;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--t);font:14px system-ui,'Noto Sans Thai',sans-serif;overflow:hidden}
+button{font:inherit;color:var(--t);background:#2a2460;border:1px solid #4a42a0;border-radius:8px;padding:8px 12px;cursor:pointer}button:hover:not(:disabled){background:#3a3290}button:disabled{opacity:.35;cursor:default}
+button.pri{background:linear-gradient(90deg,var(--a),#a83dff);border:0;font-weight:700}
+#menu{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center}
+#menu h1{font-size:34px;margin:0;background:linear-gradient(90deg,var(--b),var(--a));-webkit-background-clip:text;background-clip:text;color:transparent}
+#menu input{font:inherit;padding:8px;width:90px;text-align:center;border-radius:8px;border:1px solid #4a42a0;background:var(--p);color:var(--t)}
+.rules{max-width:460px;color:var(--m);font-size:12px;line-height:1.5}
+#game{height:100%;display:none;flex-direction:column;gap:4px;padding:6px;max-width:900px;margin:auto}
+.bar2{display:flex;justify-content:space-between;align-items:center;gap:6px;background:var(--p);border-radius:8px;padding:5px 9px;font-size:12px}
+.row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-height:128px;align-items:center}
+.ch{position:relative;width:104px;background:linear-gradient(160deg,var(--c),#120f2c 75%);border:2px solid #fff3;border-radius:10px;padding:5px;text-align:center;cursor:pointer;transition:filter .2s}
+.ch .em{font-size:36px;line-height:1.1}.ch b{font-size:12px;display:block}.ch small{font-size:11px;display:block}
+.ch.dim{filter:saturate(.3) brightness(.7)}.ch.sel{border-color:var(--b);box-shadow:0 0 14px var(--b)}.ch.tgt{border-color:var(--a);box-shadow:0 0 14px var(--a);animation:pl .6s infinite alternate}
+.bar{height:6px;background:#0008;border-radius:3px;overflow:hidden;margin:3px 0}.bar i{display:block;height:100%;background:#4ade80;transition:width .4s}
+.bd{position:absolute;top:-8px;right:-6px;font-size:18px}
+#mid{text-align:center;font-size:12px;color:var(--m);min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.dm2{display:inline-block;padding:2px 8px;border-radius:10px;background:#3b1b6b;color:#e9c8ff;margin:0 3px}
+#act{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;min-height:0}
+#hand{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;min-height:104px}
+.cd{flex:0 0 86px;background:linear-gradient(160deg,var(--c,#555),#120f2c 80%);border:2px solid #fff3;border-radius:9px;padding:5px;text-align:center;cursor:pointer;font-size:11px}
+.cd .em{font-size:28px}.cd.e{--c:#2d7a6a}.cd.no{opacity:.45}
+@keyframes pl{to{transform:scale(1.05)}}
+.fl{position:fixed;z-index:30;font-weight:900;font-size:26px;pointer-events:none;text-shadow:0 0 6px #000,0 0 12px currentColor;animation:fu 1s forwards}
+@keyframes fu{to{transform:translateY(-50px);opacity:0}}
+.pr{position:fixed;z-index:30;font-size:30px;pointer-events:none;margin:-15px 0 0 -15px;filter:drop-shadow(0 0 8px var(--b))}
+#toast{position:fixed;top:12%;left:0;right:0;text-align:center;z-index:40;pointer-events:none}
+#toast span{display:inline-block;background:#000c;border:1px solid var(--b);padding:6px 16px;border-radius:20px;font-weight:700;animation:fi .25s}
+@keyframes fi{from{transform:scale(.7);opacity:0}}
+.ban{position:fixed;inset:0;z-index:45;display:none;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(circle,var(--c) 0,#000d 70%)}
+.ban.on{display:flex;animation:bn 1.4s forwards}.ban div{font-size:clamp(28px,8vw,60px);font-weight:900;text-align:center;text-shadow:0 0 20px var(--c);letter-spacing:2px}
+@keyframes bn{0%{opacity:0;transform:scale(1.6)}15%{opacity:1;transform:scale(1)}85%{opacity:1}100%{opacity:0}}
+.cut{position:fixed;inset:0;z-index:50;background:#000;display:none;overflow:hidden}.cut.in{display:block}
+.h{position:absolute;top:0;bottom:0;width:62%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800}
+.L{left:0;clip-path:polygon(0 0,100% 0,68% 100%,0 100%);background:repeating-linear-gradient(100deg,#0003 0 8px,transparent 8px 22px),linear-gradient(135deg,var(--c),#05040f)}
+.R{right:0;clip-path:polygon(32% 0,100% 0,100% 100%,0 100%);background:repeating-linear-gradient(80deg,#0003 0 8px,transparent 8px 22px),linear-gradient(315deg,var(--c2),#05040f)}
+.L>*{margin-right:22%}.R>*{margin-left:22%}
+.big{font-size:min(30vw,150px);line-height:1}.nm{font-size:16px;text-align:center}
+.in .L{animation:sl .4s both}.in .R{animation:sr .4s both}@keyframes sl{from{transform:translateX(-100%)}}@keyframes sr{from{transform:translateX(100%)}}
+.ttl{position:absolute;left:0;right:0;top:42%;text-align:center;font-size:clamp(26px,7vw,54px);font-weight:900;font-style:italic;text-shadow:0 0 18px var(--c),3px 3px #000;opacity:0;z-index:3}
+.in .ttl{animation:tt 1s .35s both}@keyframes tt{0%{opacity:0;transform:scale(2.2) skewX(-10deg)}25%{opacity:1;transform:scale(1) skewX(-10deg)}90%{opacity:1}100%{opacity:.0}}
+.go .L .big{animation:dash .7s both}.go .R .big{animation:hurt .7s both}
+@keyframes dash{40%{transform:translateX(50%) scale(1.4)}100%{transform:translateX(0)}}@keyframes hurt{0%{filter:none}30%{transform:translateX(30px) rotate(8deg);filter:sepia(1) saturate(8) hue-rotate(-30deg)}60%{transform:translateX(-20px)}100%{transform:none}}
+.fl2{position:absolute;inset:0;background:#fff;opacity:0;z-index:4}.go .fl2{animation:fh .5s both}@keyframes fh{0%{opacity:.95}100%{opacity:0}}
+.dm{position:absolute;right:12%;bottom:14%;font-size:clamp(40px,12vw,90px);font-weight:900;color:#ff5a5a;z-index:5;opacity:0;text-shadow:3px 3px #000}.go .dm{animation:fu2 .9s .15s both}@keyframes fu2{0%{opacity:0;transform:scale(2)}30%{opacity:1;transform:scale(1)}100%{opacity:1}}
+.dbg{position:fixed;inset:0;background:#000a;z-index:35}.dcard{position:fixed;z-index:36;left:50%;top:50%;transform:translate(-50%,-50%);width:min(86vw,320px);padding:18px 16px;border-radius:16px;text-align:center;font-size:14px;line-height:1.6;background:linear-gradient(160deg,var(--c),#120f2c 70%);border:3px solid #fff6;box-shadow:0 0 40px var(--c);animation:dci .2s}.dcard .em{font-size:64px;line-height:1.2}.dcard .bt{display:flex;gap:8px;justify-content:center;margin-top:10px}@keyframes dci{from{opacity:0;transform:translate(-50%,-40%) scale(.8)}}
+#over{position:fixed;inset:0;z-index:60;background:#000c;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:44px;font-weight:900}
+</style></head><body>
+<div id="menu">
+<h1>⚔️ ANIME CARD FIGHT</h1>
+<div class="rules">Light +2 ต่อเทิร์น (สูงสุด 2→5) · จั่วได้ 2 ใบ/เทิร์น (ต้องจั่วก่อนทำ action) · ลงตัวละครได้ 4 ตัว · ตัวละครมี Skills / Charge / Defense · Time Stop ใช้ได้ทุกเมื่อ (5 light) · ใช้ Domain ซ้อนกันเพื่อ Clash</div>
+<div><button id="m1" class="pri">โหมด KO</button> <button id="m2">โหมด Damage Race (8 รอบ)</button></div>
+<button id="bot" class="pri">🤖 เล่นกับ Bot</button>
+<button id="mk">🏠 สร้างห้อง</button>
+<div><input id="code" maxlength="4" placeholder="รหัส"> <button id="jn">เข้าห้อง</button></div>
+<div id="st" style="color:var(--b)"></div></div>
+<div id="game">
+<div class="bar2" id="opi"></div><div class="row" id="of"></div>
+<div id="mid"></div>
+<div class="row" id="mf"></div>
+<div class="bar2" id="mei"></div><div id="act"></div><div id="hand"></div></div>
+<div id=dc></div><div class="cut" id="cut"></div><div class="ban" id="ban"><div></div></div><div id="toast"></div>
+<div id="over"><span id="ot"></span><button class="pri" onclick="location.reload()">กลับเมนู</button></div>
+<script>
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms)),rnd=n=>Math.floor(Math.random()*n);
+const C={gj:{n:'Gojo',e:'🕶️',col:'#6d4bff',hp:20,atk:5,s:['Blue Strike','Red Burst','Unlimited Void','Hollow Purple']},
+nr:{n:'Naruto',e:'🍥',col:'#e8890c',hp:24,atk:5,s:['Rasengan','Shadow Clone Barrage','Sage Realm','Tailed Beast Bomb']},
+lf:{n:'Luffy',e:'🏴‍☠️',col:'#c93030',hp:26,atk:5,s:['Gum-Gum Pistol','Gatling','Haki Zone','King Kong Gun']},
+lv:{n:'Levi',e:'⚔️',col:'#2f8f6b',hp:18,atk:7,s:['Blade Slash','Gas Burst Shot','Ackerman Focus','Cyclone Slash']},
+st:{n:'Saitama',e:'👊',col:'#c9a227',hp:30,atk:4,s:['Normal Punch','Consecutive Punches','Hero Aura','Serious Punch']},
+gk:{n:'Goku',e:'🔥',col:'#2f7be8',hp:22,atk:6,s:['Kick Rush','Kamehameha','Ultra Instinct Field','Spirit Bomb']}};
+const CC={gj:3,nr:2,lf:2,lv:1,st:3,gk:2};
+const X={gj:[0,{w:'t',k:'down',n:2,p:.7},{w:'e',k:'stun',n:1,p:1},{w:'t',k:'stun',n:1,p:.5}],nr:[0,{w:'s',k:'up',n:2,p:1},{w:'a',k:'up',n:3,p:1},{w:'t',k:'down',n:2,p:1}],lf:[0,{w:'t',k:'down',n:1,p:.5},{w:'e',k:'down',n:3,p:1},{w:'t',k:'stun',n:1,p:.7}],lv:[0,{w:'s',k:'up',n:1,p:1},{w:'s',k:'up',n:3,p:1},{w:'t',k:'down',n:2,p:1}],st:[0,{w:'t',k:'stun',n:1,p:.3},{w:'a',k:'up',n:3,p:1},{w:'t',k:'stun',n:1,p:1}],gk:[{w:'t',k:'down',n:1,p:.5},0,{w:'s',k:'up',n:3,p:1},{w:'t',k:'down',n:2,p:1}]};
+const DF={gj:'evade',nr:'counter',lf:'guard',lv:'evade',st:'guard',gk:'counter'};const CK=Object.keys(C),E={heal:{n:'Healing Light',e:'💖',c:1,tg:1,d:'+8 HP'},pow:{n:'Power Up',e:'💪',c:1,tg:1,d:'+3 ATK'},slot:{n:'Extra Slot',e:'➕',c:2,d:'+1 ช่อง'},ts:{n:'Time Stop',e:'⏳',c:5,d:'ข้ามเทิร์นคู่ต่อสู้'}};
+const SK=[{t:'melee',c:0,m:1},{t:'bullet',c:1,m:1.6},{t:'domain',c:2,m:0},{t:'ult',c:3,m:3.6}],TN={melee:'👊',bullet:'✨',domain:'🌌',ult:'💥'};
+const rc=()=>Math.random()<.55?{k:'c',id:CK[rnd(6)]}:{k:'e',id:['heal','pow','slot','ts','heal','pow'][rnd(6)]};
+const ch=id=>({id,hp:C[id].hp,mhp:C[id].hp,atk:C[id].atk,light:0,acted:0,st:null,fx:{}});
+const mkp=()=>({hand:[{k:'c',id:['nr','lf','lv','gk'][rnd(4)]},{k:'c',id:CK[rnd(6)]},rc(),rc()],light:0,maxL:2,drawn:0,did:0,skip:0,field:[],slots:4,dmg:0,played:0,hp:20,mhp:20});
+/* ---------- engine (host only) ---------- */
+function draw(S,s){const p=S.p[s];if(p.hand.length<7){p.hand.push(rc());p.drawn++}}
+function hit(S,s,i,d,ev){const c=S.p[s].field[i];if(c.hp<=0)return;c.hp-=d;S.p[s].dmg+=d;if(c.hp<=0)ev.push({k:'ko',s,i})}
+function startTurn(S,s,ev){const p=S.p[s];S.tc++;if(p.skip){p.skip=0;ev.push({k:'txt',t:`⏳ P${s+1} ถูกหยุดเวลา! ข้ามเทิร์น`});return startTurn(S,1-s,ev)}
+S.cur=s;p.maxL=Math.min(5,1+Math.ceil(S.tc/2));p.light=Math.min(p.maxL,p.light+2);p.did=0;p.drawn=0;p.field.forEach((c,i)=>{c.acted=0;c.st=null;if(c.fx.stun>0){c.acted=1;ev.push({k:'stn',s,i})}});
+ev.push({k:'turn',s});const d=S.dom[s];if(d){if(!S.p[1-s].field.some(c=>c.hp>0)){ev.push({k:'dot',s:1-s,i:-1,d:2});S.p[1-s].hp-=2;S.p[1-s].dmg+=2}S.p[1-s].field.forEach((c,i)=>{if(c.hp>0){ev.push({k:'dot',s:1-s,i,d:2});hit(S,1-s,i,2,ev)}});if(--d.t<=0)S.dom[s]=null}draw(S,s)}
+function fin(S,ev){for(const p of S.p)p.field=p.field.filter(c=>c.hp>0);const L=S.p.map(p=>p.hp<=0);
+if(L[0]||L[1])S.over={w:L[0]&&L[1]?-1:L[0]?1:0};else if(S.tc>(S.mode=='dmg'?16:60)){const a=S.p[0].dmg,b=S.p[1].dmg;S.over={w:a==b?-1:a>b?1:0}}
+if(S.over)ev.push({k:'over',w:S.over.w});return 1}
+function applyFx(S,s,ci,x,ti,ev){if(!x||Math.random()>x.p)return;const me=S.p[s],op=S.p[1-s],L=[];const add=(ss,i,c)=>{if(c&&c.hp>0){c.fx[x.k]=Math.max(c.fx[x.k]||0,x.n);L.push({s:ss,i,k:x.k})}};
+if(x.w=='t'&&ti>=0)add(1-s,ti,op.field[ti]);if(x.w=='s')add(s,ci,me.field[ci]);if(x.w=='e')op.field.forEach((c,i)=>add(1-s,i,c));if(x.w=='a')me.field.forEach((c,i)=>add(s,i,c));if(L.length)ev.push({k:'sts',L})}
+function A(S,s,a,ev){if(S.over)return 0;const me=S.p[s],op=S.p[1-s],mine=S.cur==s;
+if(a.t=='draw'){if(!mine||me.did||me.drawn>=2||me.light<1||me.hand.length>=7)return 0;me.light--;draw(S,s);return fin(S,ev)}
+if(a.t=='play'){const cd=me.hand[a.i];if(!cd)return 0;
+ if(cd.id=='ts'){if(me.light<5)return 0;me.light-=5;op.skip=1;me.hand.splice(a.i,1);ev.push({k:'fx',s,t:'ts'});return fin(S,ev)}
+ if(!mine)return 0;
+ if(cd.k=='c'){if(me.field.length>=me.slots||me.light<CC[cd.id])return 0;me.light-=CC[cd.id];me.field.push(ch(cd.id));me.played=1;me.hand.splice(a.i,1);me.did=1;ev.push({k:'txt',t:`🃏 P${s+1} เรียก ${C[cd.id].n}`});return fin(S,ev)}
+ const d=E[cd.id];if(me.light<d.c)return 0;
+ if(d.tg){const c=me.field[a.tg];if(!c||c.hp<=0)return 0;if(cd.id=='heal'){c.hp=Math.min(c.mhp,c.hp+8)}else c.atk+=3;ev.push({k:'fx',s,i:a.tg,t:cd.id})}
+ else{me.slots++;ev.push({k:'txt',t:`➕ P${s+1} +1 ช่อง`})}
+ me.light-=d.c;me.hand.splice(a.i,1);me.did=1;return fin(S,ev)}
+if(!mine)return 0;
+if(a.t=='end'){me.field.forEach(c=>{for(const k in c.fx)if(--c.fx[k]<=0)delete c.fx[k]});fin(S,ev);if(!S.over){startTurn(S,1-s,ev);fin(S,ev)}return 1}
+const c=me.field[a.c];if(!c||c.hp<=0||c.acted)return 0;
+if(a.t=='charge'){c.light=Math.min(5,c.light+2);c.acted=1;me.did=1;ev.push({k:'chg',s,i:a.c});return fin(S,ev)}
+if(a.t=='def'){c.st=DF[c.id];c.acted=1;me.did=1;ev.push({k:'def',s,i:a.c,d:c.st});return fin(S,ev)}
+if(a.t=='skill'){const k=SK[a.s];if(!k||c.light<k.c)return 0;const nm=C[c.id].s[a.s],pw=k.c+c.light+me.light;
+ if(k.t=='domain'){c.light-=k.c;c.acted=1;me.did=1;const od=S.dom[1-s];let ok=1;
+  if(od){ok=pw>od.pw;ev.push({k:'clash',s,a:pw,b:od.pw,ok,nm,on:od.nm})}
+  if(ok){S.dom[s]={nm,pw,t:3};if(od)S.dom[1-s]=null}ev.push({k:'dom',s,i:a.c,nm,ok});if(ok)applyFx(S,s,a.c,X[c.id][2],-1,ev);return fin(S,ev)}
+ const dir=!op.field.some(x=>x.hp>0),t=dir?{st:null,atk:0,hp:0}:op.field[a.tg];if(!t||(!dir&&t.hp<=0))return 0;c.light-=k.c;c.acted=1;me.did=1;
+ let d=Math.round(c.atk*k.m*(c.fx.up>0?1.5:1)*(c.fx.down>0?.5:1)),miss=0,g=0;
+ if(t.st=='guard'&&k.t!='ult'){d=Math.ceil(d/2);g=1}
+ if(t.st=='evade'&&k.t!='ult'&&Math.random()<.2+.5*t.atk/(t.atk+t.hp)){miss=1;d=0}
+ ev.push({k:'atk',s,i:a.c,ts:1-s,ti:dir?-1:a.tg,t:k.t,nm,dmg:d,miss,g});if(dir){op.hp-=d;op.dmg+=d}else hit(S,1-s,a.tg,d,ev);
+ if(t.st=='counter'&&(k.t=='melee'||k.t=='bullet')&&t.hp>0){t.st=null;const cd=Math.round(t.atk*1.5);ev.push({k:'ctr',s:1-s,i:a.tg,ts:s,ti:a.c,dmg:cd});hit(S,s,a.c,cd,ev)}
+ applyFx(S,s,a.c,X[c.id][a.s],dir?-1:a.tg,ev);return fin(S,ev)}
+return 0}
+/* ---------- host / network ---------- */
+let G=null,S=null,SEAT=0,HOST=true,BOT=false,R=null,MODE='ko',busy=false,Q=[],U={},last=null;
+function startGame(){S={mode:MODE,tc:0,cur:0,over:null,p:[mkp(),mkp()],dom:[null,null]};const ev=[];startTurn(S,0,ev);commit([]);$('#menu').style.display='none';$('#game').style.display='flex'}
+async function commit(ev){const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();if(R)R.emit('st',last);await recv(snap,ev);if(BOT&&S.cur==1&&!S.over)bot()}
+let LT=0,DL=0,TT=0,TC=-1;setInterval(()=>{const t=$('#tm');if(!t||!G||G.over)return;const s=Math.max(0,Math.ceil((DL-Date.now())/1000));t.textContent=s+'s';t.style.color=s<=15?'#ff5a5a':''},250);
+function tm(){if(!HOST)return;if(S.over){clearTimeout(TT);return}if(S.tc===TC)return;TC=S.tc;clearTimeout(TT);if(BOT&&S.cur==1)return;TT=setTimeout(()=>{if(S.tc===TC&&!S.over)hostApply(S.cur,{t:'end'})},90000)}
+function hostApply(s,a){const ev=[];if(A(S,s,a,ev))commit(ev)}
+function doAct(a){if(HOST)hostApply(SEAT,a);else R.emit('do',a)}
+function recv(s2,ev){return new Promise(res=>{Q.push([s2,ev,res]);pump()})}
+async function pump(){if(busy)return;busy=true;while(Q.length){const[s2,ev,res]=Q.shift();if(G){for(const e of ev)await pe(e)}else{$('#menu').style.display='none';$('#game').style.display='flex'}G=s2;G.p.forEach(p=>p.field[-1]=p);if(G.tc!==LT){LT=G.tc;DL=Date.now()+90000;U={}}render();res()}busy=false;render();if(G.over){const w=G.over.w;$('#ot').textContent=w<0?'🤝 DRAW':w==SEAT?'🏆 VICTORY':'💀 DEFEAT';$('#over').style.display='flex'}}
+async function bot(){await sleep(900);const p=S.p[1],o=S.p[0];const go=async a=>{if(S.over||S.cur!=1)return 0;const ev=[];if(!A(S,1,a,ev))return 0;await commit0(ev);return 1};
+if(p.drawn<2&&Math.random()<.5)await go({t:'draw'});
+for(let i=0;i<9;i++){const j=p.hand.findIndex(c=>c.k=='c'&&CC[c.id]<=p.light);if(j<0||p.field.length>=p.slots||!await go({t:'play',i:j}))break}
+for(let i=0;i<6;i++){const j=p.hand.findIndex(c=>c.k=='e'&&c.id!='ts'&&p.light>=E[c.id].c&&(c.id!='slot'||p.hand.some(x=>x.k=='c')));if(j<0||Math.random()<.3)break;const id=p.hand[j].id;let tg=0;if(id=='heal')tg=p.field.reduce((b,c,i)=>c.hp/c.mhp<p.field[b].hp/p.field[b].mhp?i:b,0);else if(id=='pow')tg=p.field.reduce((b,c,i)=>c.atk>p.field[b].atk?i:b,0);if(!p.field.length||!await go({t:'play',i:j,tg}))break}
+const ts=p.hand.findIndex(c=>c.id=='ts');if(ts>=0&&p.light>=5)await go({t:'play',i:ts});
+for(let i=0;i<p.field.length&&!S.over;i++){const c=p.field[i];if(!c||c.acted||c.hp<=0)continue;const tg=o.field.reduce((b,x,k)=>x.hp<o.field[b].hp?k:b,0),r=Math.random();
+ 
+ if(c.light>=3)await go({t:'skill',c:i,s:3,tg});else if(c.light>=2&&!S.dom[1]&&r<.6)await go({t:'skill',c:i,s:2});else if(c.light>=1&&r<.4)await go({t:'skill',c:i,s:1,tg});else if(r<.55&&c.light<3)await go({t:'charge',c:i});else if(r<.65)await go({t:'def',c:i});else await go({t:'skill',c:i,s:0,tg})}
+if(!S.over&&S.cur==1)await go({t:'end'});if(!S.over&&S.cur==1)bot()}
+async function commit0(ev){const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();await recv(snap,ev)}
+async function online(code,host){const room=await claude.use('room');if(!room){$('#st').textContent='ห้องออนไลน์ใช้ไม่ได้ (ต้อง sign in)';return}
+R=await room.join('cf'+code);HOST=host;SEAT=host?0:1;
+if(host){$('#st').textContent='รหัสห้อง: '+code+' — รอผู้เล่นคนที่สอง…';R.on('do',m=>{if(!m.isMe&&S)hostApply(1,m.data)});R.on('hi',()=>{if(last)R.emit('st',{S:last.S,ev:[]})});R.onPeers(()=>{if(!S&&R.peers().length>=2)startGame()})}
+else{$('#st').textContent='กำลังเข้าห้อง '+code+'…';R.on('st',m=>{if(!m.isMe)recv(m.data.S,m.data.ev)});const hi=()=>{if(!G)R.emit('hi',1)};hi();setInterval(hi,2000)}}
+/* ---------- animation ---------- */
+const el=(s,i)=>i<0?$(s==SEAT?'#mei':'#opi'):$('#c'+s+'_'+i);
+function toast(t,ms=900){$('#toast').innerHTML=`<span>${t}</span>`;return sleep(ms)}
+function fl(node,t,col){if(!node)return;const r=node.getBoundingClientRect(),d=document.createElement('div');d.className='fl';d.textContent=t;d.style.cssText=`left:${r.left+r.width/2-20}px;top:${r.top+10}px;color:${col}`;document.body.append(d);setTimeout(()=>d.remove(),1000)}
+async function banner(t,col,ms=1400){const b=$('#ban');b.style.setProperty('--c',col);b.firstChild.innerHTML=t;b.className='ban on';await sleep(ms);b.className='ban'}
+function hpUpd(s,i,hp){const c=G.p[s].field[i],n=el(s,i);if(!c||!n)return;if(i<0){c.hp=Math.max(0,hp);$('#hp'+s).textContent='❤️'+c.hp+'/20';return}c.hp=Math.max(0,hp);n.querySelector('.bar i').style.width=100*c.hp/c.mhp+'%';n.querySelector('.hp').textContent='❤️'+c.hp+'/'+c.mhp}
+async function cut(e){const A=G.p[e.s].field[e.i],T=G.p[e.ts].field[e.ti],a=C[A.id],t=C[T.id]||{n:'Player '+(e.ts+1),e:'🧑',col:'#666'},o=$('#cut');o.style.setProperty('--c',a.col);o.style.setProperty('--c2',t.col);
+o.innerHTML=`<div class="h L"><div class=big>${a.e}</div><div class=nm>${a.n}${e.s==SEAT?'':' (ศัตรู)'}<br>⚔️ ${A.atk}</div></div><div class="h R"><div class=big>${t.e}</div><div class=nm>${t.n}<br>❤️ ${T.hp}/${T.mhp}</div></div><div class=ttl>${e.nm}</div><div class=fl2></div><div class=dm>-${e.dmg}</div>`;
+o.className='cut in';await sleep(1400);o.classList.add('go');await sleep(1100);o.className='cut'}
+async function pe(e){const me=SEAT;
+if(e.k=='turn'){await toast(e.s==me?'⚡ ตาของคุณ':'⏳ ตาศัตรู',700)}
+else if(e.k=='txt')await toast(e.t,900);
+else if(e.k=='fx'){if(e.t=='ts'){await banner('⏳ TIME STOP ⏳','#35e0ff')}else{fl(el(e.s,e.i),e.t=='heal'?'+8 💖':'ATK +3 💪',e.t=='heal'?'#4ade80':'#ffd23d');await sleep(700)}}
+else if(e.k=='chg'){const n=el(e.s,e.i);fl(n,'⚡ +2','#35e0ff');n&&n.animate([{filter:'brightness(1)'},{filter:'brightness(2.5) drop-shadow(0 0 14px #35e0ff)'},{filter:'brightness(1)'}],700);await sleep(750)}
+else if(e.k=='def'){const n=el(e.s,e.i);if(e.d=='counter'){if(e.s==me){fl(n,'🗡 COUNTER (ซ่อน)','#fff');await sleep(700)}}else{fl(n,e.d=='guard'?'🛡 GUARD':'💨 EVADE','#fff');await sleep(700)}}
+else if(e.k=='ctr'){const t=el(e.s,e.i),a=el(e.ts,e.ti);await toast('🗡 COUNTER!',500);if(!t||!a)return;const ar=t.getBoundingClientRect(),tr=a.getBoundingClientRect();t.style.zIndex=5;t.animate([{transform:'none'},{transform:`translate(${tr.left-ar.left}px,${tr.top-ar.top}px) scale(1.3) rotate(8deg)`,offset:.4},{transform:'none'}],{duration:560,easing:'ease-out'});await sleep(225);t.style.zIndex='';fl(a,'-'+e.dmg,'#ff5a5a');a.animate([{transform:'none',filter:'none'},{transform:'translateX(-10px)',filter:'brightness(3)'},{transform:'translateX(10px)'},{transform:'none',filter:'none'}],{duration:350});hpUpd(e.ts,e.ti,G.p[e.ts].field[e.ti].hp-e.dmg);await sleep(450)}
+else if(e.k=='sts'){for(const o of e.L)fl(el(o.s,o.i),SN[o.k],'#ffd23d');await sleep(850)}
+else if(e.k=='stn'){fl(el(e.s,e.i),'😵 งงงวย','#ffd23d');await sleep(700)}
+else if(e.k=='dot'){const n=el(e.s,e.i);fl(n,'-'+e.d,'#c77dff');n&&n.animate([{transform:'none'},{transform:'translateX(5px)'},{transform:'none'}],200);hpUpd(e.s,e.i,G.p[e.s].field[e.i].hp-e.d);await sleep(350)}
+else if(e.k=='clash'){await banner(`⚔️ DOMAIN CLASH ⚔️<br>${e.s==me?'คุณ':'ศัตรู'} ${e.a} VS ${e.b}<br>${e.ok?'ชนะ!':'แพ้…'}`,'#ff3d81',2000)}
+else if(e.k=='dom'){if(e.ok)await banner('🌌 DOMAIN EXPANSION 🌌<br>'+e.nm,e.s==me?'#35e0ff':'#ff3d81',1600)}
+else if(e.k=='ko'){const n=el(e.s,e.i);n&&n.animate([{opacity:1},{opacity:.1,transform:'translateY(20px) rotate(10deg)',filter:'grayscale(1)'}],{duration:700,fill:'forwards'});await sleep(700)}
+else if(e.k=='atk'){if(e.t=='ult')await cut(e);const a=el(e.s,e.i),t=el(e.ts,e.ti);if(!a||!t)return;
+ const ar=a.getBoundingClientRect(),tr=t.getBoundingClientRect(),dx=tr.left-ar.left,dy=tr.top-ar.top;a.style.zIndex=5;
+ if(e.t=='bullet'){a.animate([{transform:'none'},{transform:'scale(1.2) translateY(6px)'},{transform:'none'}],300);const p=document.createElement('div');p.className='pr';p.textContent='✨';p.style.cssText=`left:${ar.left+ar.width/2}px;top:${ar.top+ar.height/2}px`;document.body.append(p);await p.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px) scale(1.8)`}],{duration:380,easing:'ease-in'}).finished;p.remove()}
+ else if(e.t=='melee'||e.t=='ult'){a.animate([{transform:'none'},{transform:`translate(${dx}px,${dy}px) scale(1.25) rotate(-6deg)`,offset:.4},{transform:'none'}],{duration:560,easing:'ease-out'});await sleep(225)}
+ a.style.zIndex='';
+ if(e.miss){fl(t,'MISS 💨','#fff');t.animate([{transform:'none'},{transform:'translateX(40px) rotate(8deg)',opacity:.4},{transform:'none'}],400)}
+ else{fl(t,(e.g?'🛡 ':'')+'-'+e.dmg,'#ff5a5a');t.animate([{transform:'none',filter:'none'},{transform:'translateX(-8px)',filter:'brightness(3)'},{transform:'translateX(8px)'},{transform:'none',filter:'none'}],{duration:350});
+  if(e.t=='ult')document.body.animate([{transform:'translate(0)'},{transform:'translate(8px,-6px)'},{transform:'translate(-8px,6px)'},{transform:'translate(0)'}],{duration:400,iterations:2});
+  const x=document.createElement('div');x.className='fl';x.textContent=TN[e.t]=='💥'?'💥':'💢';x.style.cssText=`left:${tr.left+tr.width/2-20}px;top:${tr.top+30}px;font-size:56px`;document.body.append(x);setTimeout(()=>x.remove(),700);hpUpd(e.ts,e.ti,G.p[e.ts].field[e.ti].hp-e.dmg)}
+ await sleep(450)}}
+const SN={stun:'😵 งงงวย',down:'⬇️ Damage Down',up:'⬆️ Damage Up'},SI={stun:'😵',down:'⬇️',up:'⬆️'},DN={guard:'🛡 Guard',evade:'💨 Evade',counter:'🗡 Counter'};
+function fxT(x){return `${{t:'เป้าหมาย',s:'ตัวเอง',e:'ศัตรูทุกตัว',a:'พวกเราทุกตัว'}[x.w]}: ${{stun:'😵 งงงวย (ทำอะไรไม่ได้)',down:'⬇️ Damage Down −50%',up:'⬆️ Damage Up +50%'}[x.k]} ${x.n} เทิร์น (โอกาส ${Math.round(x.p*100)}%)`}
+function desc(c,p){const d=C[c.id];
+if(p=='pc')return'<b>⚡ Charge</b> · ได้ light ตัวละคร +2 (สูงสุด 5) ใช้ action ของตัวนี้ในเทิร์น';
+if(p=='pd'){const df=DF[c.id];return`<b>${DN[df]}</b> · `+{guard:'ลดดาเมจ Melee/Bullet ลงครึ่งหนึ่งจนถึงต้นเทิร์นหน้า (ไม่ลดท่าไม้ตาย)',evade:`โอกาสหลบ Melee/Bullet ~${Math.round(100*(.2+.5*c.atk/(c.atk+c.hp)))}% (ขึ้นกับ ATK/HP)`,counter:'ศัตรูมองไม่เห็น! ถ้าโดน Melee/Bullet แล้วรอด จะสวนกลับ ATK×1.5 (ครั้งเดียว)'}[df]}
+const n=+p[1],k=SK[n],x=X[c.id][n],dm=Math.round(c.atk*k.m*(c.fx.up>0?1.5:1)*(c.fx.down>0?.5:1));
+const ty={melee:'Melee โจมตีระยะใกล้',bullet:'Bullet โจมตีระยะไกล',domain:'Domain อาณาเขต 3 เทิร์น ศัตรูทุกตัวเสีย 2 HP/เทิร์น · ถ้าศัตรูมี Domain อยู่จะ Clash ด้วย light',ult:'ท่าไม้ตาย (cutscene) ไม่โดนหลบ/Guard'}[k.t];
+return`<b>${d.s[n]}</b> · ${ty}<br>${k.t=='domain'?'':'ดาเมจ <b>'+dm+'</b> · '}เสีย light ตัวละคร <b>${k.c}</b> (มี ${c.light})${x?'<br>✨ '+fxT(x):''}`}
+function canUse(c,p){return p=='pc'||p=='pd'||c.light>=SK[+p[1]].c}
+/* ---------- render / input ---------- */
+const pips=(l,m)=>'✦'.repeat(l)+'<span style="opacity:.3">'+'✧'.repeat(Math.max(0,m-l))+'</span>';
+function chH(s,i,c){const d=C[c.id],tg=U.t&&U.t.side==s&&c.hp>0,sel=U.c===i&&s==SEAT;return`<div class="ch ${c.acted?'dim':''} ${sel?'sel':''} ${tg?'tgt':''}" id="c${s}_${i}" style="--c:${d.col}"><div class=em>${d.e}</div><b>${d.n}</b><div class=bar><i style="width:${100*c.hp/c.mhp}%"></i></div><small class=hp>❤️${c.hp}/${c.mhp}</small><small>⚔️${c.atk} ${pips(c.light,3)}</small><small>${Object.entries(c.fx||{}).map(([k,v])=>SI[k]+v).join(' ')}</small>${c.st&&(c.st!='counter'||s==SEAT)?`<span class=bd>${{guard:'🛡',evade:'💨',counter:'🗡'}[c.st]}</span>`:''}</div>`}
+function info(s){const p=G.p[s];return`<span><b>P${s+1}${s==SEAT?' (คุณ)':''}</b> ${G.cur==s?'◀':''}</span><span>Light ${pips(p.light,p.maxL)}</span><span id=hp${s}>❤️${p.hp}/20</span><span>🃏${p.hand.length}/7</span><span>💥รับ ${p.dmg}</span>`}
+function render(){if(!G)return;const me=SEAT,op=1-me,my=G.cur==me&&!G.over&&!busy;
+$('#opi').innerHTML=info(op);$('#mei').innerHTML=info(me)+`<span><button id=bd ${my&&!G.p[me].did&&G.p[me].drawn<2&&G.p[me].light>=1&&G.p[me].hand.length<7?'':'disabled'} data-a=draw>จั่ว ✦1 (${G.p[me].drawn}/2)</button> <button class=pri data-a=end ${my?'':'disabled'}>จบเทิร์น</button></span>`;
+$('#of').innerHTML=G.p[op].field.map((c,i)=>chH(op,i,c)).join('')||'<small>— ว่าง —</small>';$('#mf').innerHTML=G.p[me].field.map((c,i)=>chH(me,i,c)).join('')||'<small>— ลงการ์ดตัวละคร —</small>';
+const dm=[0,1].map(s=>G.dom[s]?`<span class=dm2>🌌 ${G.dom[s].nm} (${s==me?'คุณ':'ศัตรู'}) ${G.dom[s].t}t · ${G.dom[s].pw}</span>`:'').join('');
+$('#mid').innerHTML=`<div>รอบ ${Math.ceil(G.tc/2)} · ${G.mode=='dmg'?'Damage Race':'KO'} · ${my?'<b style="color:var(--b)">ตาของคุณ</b>':'ตาศัตรู'} · ⏱ <b id=tm></b></div><div>${dm}</div><div>${U.t?'🎯 เลือกเป้าหมาย (คลิกที่อื่นเพื่อยกเลิก)':''}</div>`;
+const c=U.c!=null&&my?G.p[me].field[U.c]:null;
+$('#act').innerHTML=c?SK.map((k,i)=>`<button data-a=p${i} class="${U.p=='p'+i?'pri':''}" ${c.light>=k.c?'':'style="opacity:.5"'}>${TN[k.t]} ${C[c.id].s[i]}</button>`).join('')+`<button data-a=pc class="${U.p=='pc'?'pri':''}">⚡ Charge</button><button data-a=pd class="${U.p=='pd'?'pri':''}">${DN[DF[c.id]]}</button>`:'';
+$('#dc').innerHTML=c&&U.p?`<div class=dbg data-a=close></div><div class=dcard style="--c:${C[c.id].col}"><div class=em>${C[c.id].e}</div><div>${desc(c,U.p)}</div><div class=bt><button class=pri data-a=use ${canUse(c,U.p)?'':'disabled'}>ใช้ท่านี้</button><button data-a=close>ปิด</button></div></div>`:'';
+$('#hand').innerHTML=G.p[me].hand.map((h,i)=>{if(h.k=='c'){const d=C[h.id];return`<div class="cd ${G.p[me].light>=CC[h.id]?'':'no'}" data-h=${i} style="--c:${d.col}"><div class=em>${d.e}</div><b>${d.n}</b><br>❤️${d.hp} ⚔️${d.atk}<br>✦${CC[h.id]} ลงสนาม</div>`}const d=E[h.id],ok=h.id=='ts'?G.p[me].light>=5:my&&G.p[me].light>=d.c;return`<div class="cd e ${ok?'':'no'}" data-h=${i}><div class=em>${d.e}</div><b>${d.n}</b><br>✦${d.c}<br>${d.d}</div>`}).join('')}
+document.addEventListener('click',e=>{if(busy||!G||G.over||!$('#game').offsetParent)return;const me=SEAT,my=G.cur==me,ch=e.target.closest('.ch'),cd=e.target.closest('.cd'),b=e.target.closest('[data-a]');
+let s,i;if(ch){[s,i]=ch.id.slice(1).split('_').map(Number)}
+if(U.t&&ch&&s==U.t.side&&G.p[s].field[i].hp>0){const a={...U.t.a,tg:i};U={};doAct(a);return}
+if(b){const v=b.dataset.a;if(v=='draw'||v=='end'){U={};doAct({t:v})}else if(v=='close'){U.p=null;render()}else if(v[0]=='p'){U.p=v;render()}else if(v=='use'){const p=U.p,c=U.c;if(p=='pc'){doAct({t:'charge',c});U={}}else if(p=='pd'){doAct({t:'def',c});U={}}else{const n=+p[1];if(SK[n].t=='domain'){doAct({t:'skill',c,s:n});U={}}else if(!G.p[1-me].field.some(x=>x.hp>0)){doAct({t:'skill',c,s:n,tg:-1});U={}}else{U={t:{a:{t:'skill',c,s:n},side:1-me}};render()}}}return}
+if(cd){const h=G.p[me].hand[+cd.dataset.h];if(h.id=='ts'||(my&&h.k=='c')){U={};doAct({t:'play',i:+cd.dataset.h})}else if(my&&E[h.id].tg){U={t:{a:{t:'play',i:+cd.dataset.h},side:me}}}else if(my){U={};doAct({t:'play',i:+cd.dataset.h})}render();return}
+if(ch&&s==me&&my&&!G.p[me].field[i].acted){U={c:i};render();return}
+U={};render()});
+$('#m1').onclick=()=>{MODE='ko';$('#m1').className='pri';$('#m2').className=''};$('#m2').onclick=()=>{MODE='dmg';$('#m2').className='pri';$('#m1').className=''};
+$('#bot').onclick=()=>{BOT=true;HOST=true;SEAT=0;startGame()};
+$('#mk').onclick=()=>online(String(1000+rnd(9000)),true);
+$('#jn').onclick=()=>{const c=$('#code').value.trim();if(c)online(c,false)};
+</script></body></html>
