@@ -117,7 +117,7 @@ if(x.w=='t'&&ti>=0)add(1-s,ti,op.field[ti]);if(x.w=='s')add(s,ci,me.field[ci]);i
 function A(S,s,a,ev){if(S.over)return 0;const me=S.p[s],op=S.p[1-s],mine=S.cur==s;
 if(a.t=='draw'){if(S.tc<=1||!mine||me.did||me.drawn>=2||me.light<1||me.hand.length>=7)return 0;me.light--;draw(S,s);return fin(S,ev)}
 if(a.t=='play'){const cd=me.hand[a.i];if(!cd)return 0;
- if(cd.id=='ts'){if(me.light<5)return 0;me.light-=5;op.skip=1;me.hand.splice(a.i,1);ev.push({k:'fx',s,t:'ts'});return fin(S,ev)}
+ if(cd.id=='ts'){if(me.light<5)return 0;me.light-=5;op.skip=1;me.did=1;me.hand.splice(a.i,1);ev.push({k:'fx',s,t:'ts'});return fin(S,ev)}
  if(!mine)return 0;
  if(cd.k=='c'){if(me.field.length>=me.slots||me.light<CC[cd.id])return 0;me.light-=CC[cd.id];me.field.push(ch(cd.id));me.played=1;me.hand.splice(a.i,1);me.did=1;ev.push({k:'txt',t:`🃏 P${s+1} deployed ${C[cd.id].n}`});return fin(S,ev)}
  const d=E[cd.id];if(me.light<d.c)return 0;
@@ -257,7 +257,7 @@ if(p=='pc'){let m=2;if(c.fx.chup>0)m=Math.ceil(m*1.5);if(c.fx.chdn>0)m=Math.floo
 if(p=='pd'){const df=DF[c.id];return `<b>${DN[df]}</b> · `+{guard:'Reduce Melee/Bullet damage by 50% until next turn',evade:'Chance to evade Melee/Bullet attacks',counter:'Counter-attack when hit by Melee/Bullet'}[df]}
 const n=+p[1],k=sk(c.id,n),x=X[c.id][n],dm=Math.round(c.atk*k.m*(c.fx.up>0?1.5:1)*(c.fx.down>0?.5:1));
 const ty={melee:'Melee Close Attack',bullet:'Ranged Attack',domain:'Domain 3 Turns Damage over Time',ult:'Ultimate Attack (Ignores Guard/Evade)',sup:'Support Buff',aoe:'AOE All Targets Attack'};
-return `<b>${d.s[n]}</b> · ${ty[k.t]||''}<br>${k.t=='domain'||k.t=='sup'?'':'Damage <b>'+dm+'</b> · '}Cost <b>${k.c}</b> Light (Has ${c.light})${x?`<br>Effect: ${SN[x.k]\vert{}\vert{}x.k} (${Math.round(x.p*100)}%)`:''}`}
+return `<b>${d.s[n]}</b> · ${ty[k.t]||''}<br>${k.t=='domain'||k.t=='sup'?'':'Damage <b>'+dm+'</b> · '}Cost <b>${k.c}</b> Light (Has ${c.light})${x?`<br>Effect: ${SN[x.k] || x.k} (${Math.round(x.p*100)}%)`:''}`}
 
 /* ---------- Render & UI ---------- */
 const pips=(l,m)=>'✦'.repeat(l)+'<span style="opacity:.3">'+'✧'.repeat(Math.max(0,m-l))+'</span>';
