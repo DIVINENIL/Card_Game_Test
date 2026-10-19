@@ -174,7 +174,8 @@ for(let i=0;i<6;i++){const j=p.hand.findIndex(c=>c.k=='e'&&c.id!='ts'&&p.light>=
 const ts=p.hand.findIndex(c=>c.id=='ts');if(ts>=0&&p.light>=5)await go({t:'play',i:ts});
 for(let i=0;i<p.field.length&&!S.over;i++){const c=p.field[i];if(!c||c.acted||c.hp<=0)continue;
  const tg=o.field.length?o.field.reduce((b,x,k)=>x.hp<o.field[b].hp?k:b,0):0,r=Math.random();
- if(c.light>=3)await go({t:'skill',c:i,s:3,tg});else if(c.light>=2&&o.field.length>=2&&r<.5)await go({t:'skill',c:i,s:4});else if(c.light>=2&&!S.dom[1]&&r<.6)await go({t:'skill',c:i,s:2});else if(c.light>=1&&r<.4)await go({t:'charge',c:i});else if(Math.random()<.6)await go({t:'def',c:i});else await go({t:'skill',c:i,s:0,tg})}
+ const has=n=>SKS[CC[c.id]].includes(n);
+ if(c.light>=3&&has(3))await go({t:'skill',c:i,s:3,tg});else if(c.light>=2&&has(4)&&o.field.length>=2&&r<.5)await go({t:'skill',c:i,s:4});else if(c.light>=2&&has(2)&&!S.dom[1]&&r<.6)await go({t:'skill',c:i,s:2});else if(c.light>=1&&r<.4)await go({t:'charge',c:i});else if(Math.random()<.6)await go({t:'def',c:i});else await go({t:'skill',c:i,s:0,tg})}
 if(!S.over&&S.cur==1)await go({t:'end'});if(!S.over&&S.cur==1)bot()}
 async function commit0(ev){const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();await recv(snap,ev)}
 
