@@ -289,7 +289,7 @@ function customSkill(S,s,a,ev){
    if(n===1){if(ally){ally.fx.up=Math.max(ally.fx.up||0,2);ev.push({k:'sts',L:[{s,i:me.field.indexOf(ally),k:'up'}]})}}
    if(n===2)me.field.forEach(x=>heal(x,.25));
    if(n===3)attack(enemy,7,2,3);
-   if(n===4&&me.light>=0){c.id='pwg';c.hp=Math.min(50,c.hp+10);c.mhp=50;c.atk=7;c.light=0;c.fx={};c.bleed=0;ev.push({k:'txt',t:'🩸 The Crimson God awakens: Max HP 50, ATK 7, new skill set. Whenever it uses a Skill (except Charge/Defense), it gains 3 Bleed for 1 turn.'});ev.push({k:'deploy',id:'pwg'})
+   if(n===4&&me.light>=0){c.id='pwg';c.hp=Math.min(50,c.hp+10);c.mhp=50;c.atk=7;c.light=0;c.fx={};c.bleed=0;ev.push({k:'txt',t:'🩸 The Crimson God awakens: Max HP 50, ATK 7, new skill set. Whenever it uses a Skill (except Charge/Defense), it gains 3 Bleed for 1 turn.'});ev.push({k:'deploy',id:'pwg'})}
  }else if(c.id==='pwg'){
    // The Crimson God gains 3 Bleed whenever it uses a skill.
    if(n===0)attack(enemy,5,2,2);
