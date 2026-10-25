@@ -601,7 +601,7 @@ function customSkill(S,s,a,ev){
    if(n===0){const forms=['Walk Point','Brain Point','Heavy Point','Monster Point'];c.form=forms[(forms.indexOf(c.form)+1)%forms.length];for(const fk of ['walkpoint','brainpoint','heavypoint','monsterpoint'])delete c.fx[fk];if(c.form==='Walk Point'){c.fx.walkpoint=1;c.fx.godspeed=Math.max(c.fx.godspeed||0,1)}if(c.form==='Brain Point'){c.fx.brainpoint=1;c.fx.chup=Math.max(c.fx.chup||0,1)}if(c.form==='Heavy Point'){c.fx.heavypoint=1;c.fx.prot=Math.max(c.fx.prot||0,2);c.fx.up=Math.max(c.fx.up||0,2)}if(c.form==='Monster Point'){c.fx.monsterpoint=3;c.fx.root=Math.max(c.fx.root||0,1);c.fx.berserk=Math.max(c.fx.berserk||0,2);c.fx.up=Math.max(c.fx.up||0,2)}ev.push({k:'txt',t:'🦌 Chopper changes form: '+c.form+'. Form effect is now shown under Chopper.'});}
    if(n===1)attack(enemy,c.atk*1.2*(c.form==='Monster Point'?1.75:1));
    if(n===2){heal(ally,.5);if(ally){ally.fx.prot=Math.max(ally.fx.prot||0,2);ev.push({k:'sts',L:[{s,i:me.field.indexOf(ally),k:'prot'}]})}}
-   if(n===3)me.field.forEach(x=>heal(x,.4));
+   if(n===3)me.field.forEach(x=>{if(x!==c)heal(x,.4)});
    if(n===4){c.form='Monster Point';c.fx.root=1;c.fx.berserk=3;c.fx.up=3;c.fx.monsterpoint=3;ev.push({k:'txt',t:'🦌 Monster Point activated for 3 turns.'})}
  }else if(c.id==='pw'){
    if(n===0)attack(enemy,3,2,1);
@@ -1460,7 +1460,7 @@ const SKILL_SPEC = {
       notes: 'Walk Point: 50% automatic Evade chance. Brain Point: gain Charge Up at the start of your turn. Heavy Point: gain Protection and ATK Up at the start of your turn. Monster Point: gain Root and Berserker at the start of your turn, and Reindeer Kick deals 75% more damage. While in this form, Chopper can only use Reindeer Kick.' },
     { damage: c => String(scaledDamage(c, c.atk * 1.2 * (c.form === 'Monster Point' ? 1.75 : 1))), effect: 'Deal damage to one enemy.', notes: 'While Chopper is in Monster Point, Reindeer Kick deals 75% more damage.' },
     { target: 'One ally', effect: 'Heal one ally for 50% of their maximum HP and grant Protection.', duration: turnsText(2) },
-    { target: 'All allies', effect: 'Heal all allies for 40% of their maximum HP.' },
+    { target: 'All allies except Chopper', effect: 'Heal all living allies other than Chopper for 40% of their maximum HP.' },
     { target: 'Self', effect: 'Enter Monster Point; gain Root and Berserker while transformed, and Reindeer Kick deals 75% more damage. While in this form, Chopper can only use Reindeer Kick.', duration: turnsText(3),
       notes: 'When it ends, return to Brain Point and gain Brain Point’s Charge Up effect.' }
   ],
