@@ -250,7 +250,8 @@ linear-gradient(#ff1f1f,#ff1f1f) 52% 88%/42% 6% no-repeat;animation:teFlick .55s
 <div id="menu">
 <h1>⚔️ ANIME CARD FIGHT</h1>
 <div class="rules">Start with 4 character slots (up to 7 with Slot cards) · Hand limit 7 cards · Light +2/turn (max 5) · Draw costs 1 Light per card (repeatable, hand limit 7) · Charge/Guard use the character’s action</div>
-<div><button id="m1" class="pri">KO Mode</button> <button id="m2">Damage Race Mode (8 Rounds)</button></div>
+<div id="modeBox" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:480px"><button id="m1" class="pri" data-mode="ko">💀 KO Mode</button><button id="m2" data-mode="dmg">🏁 Damage Race</button><button id="m3" data-mode="blitz">⚡ Blitz Race</button><button id="m4" data-mode="elim">☠️ Elimination</button><button id="m5" data-mode="rush">🎯 Damage Rush</button></div>
+<div id="modeDesc" style="font-size:12px;line-height:1.5;color:#c9c4f0;max-width:460px;min-height:36px"></div>
 <div id="botLevel" style="display:flex;gap:6px;justify-content:center;margin:0 0 6px"><button data-lv="easy" style="flex:1;min-width:0;font-size:13px;padding:8px 6px">😊 Easy</button><button data-lv="normal" class="pri" style="flex:1;min-width:0;font-size:13px;padding:8px 6px">⚔️ Normal</button><button data-lv="hard" style="flex:1;min-width:0;font-size:13px;padding:8px 6px">🔥 Hard</button></div>
 <button id="bot" class="pri">🤖 Vs Bot</button>
 <button id="tutorialBtn">📘 Tutorial Mode</button>
@@ -572,6 +573,13 @@ const NEW_EFFECTS=[
 for(const [id,n,e,c,side,fx,power,dur] of NEW_EFFECTS){E[id]={n,e,c,tg:1,side,fx,power,dur,extra:1}}
 const rc=()=>Math.random()<.48?{k:'c',id:CK[rnd(CK.length)]}:{k:'e',id:Object.keys(E)[rnd(Object.keys(E).length)]};
 const ch=id=>({id,hp:C[id].hp,mhp:C[id].hp,atk:C[id].atk,light:0,acted:0,st:null,fx:{},ammo:id==='lh'?6:0,ammoType:id==='lh'?'tigermark':null,form:id==='ch'?'Walk Point':null,reloadCount:0,damageBy:{},preyTarget:null,starForm:null});
+const MODES={
+ ko:{n:'KO Mode',icon:'💀',d:'No turn limit. Reduce the enemy player’s HP to 0 to win.'},
+ dmg:{n:'Damage Race',icon:'🏁',rounds:30,d:'30 rounds. If nobody is KO’d, the player who took the LEAST total damage wins.'},
+ blitz:{n:'Blitz Race',icon:'⚡',rounds:15,d:'A shorter 15-round Damage Race. If nobody is KO’d, the player who took the LEAST total damage wins.'},
+ elim:{n:'Elimination',icon:'☠️',koGoal:3,d:'No turn limit. The first player to defeat 3 enemy characters wins (or KO the enemy player).'},
+ rush:{n:'Damage Rush',icon:'🎯',dmgGoal:200,d:'No turn limit. The first player to deal 200 total damage wins (or KO the enemy player).'}
+};
 const mkp=()=>({hand:[{k:'c',id:CK[rnd(CK.length)]},{k:'c',id:CK[rnd(CK.length)]},rc(),rc()],light:0,maxL:2,drawn:0,did:0,skip:0,field:[],slots:4,dmg:0,played:0,discarded:0,hp:100,mhp:100,lastStandActive:0,lastStandBonusTurn:-1,revengeTurn:-1,revengeGained:0});
 
 /* ============================================================================
@@ -676,8 +684,12 @@ const d=S.dom[s];if(d){const o=S.p[1-s];
  o.field.forEach((c,i)=>{if(c.hp>0){ev.push({k:'dot',s:1-s,i,d:4});c.hp-=4;o.dmg+=4}});
  d.t--;if(d.t<=0)S.dom[s]=null}
 }
-function fin(S,ev){for(const p of S.p)p.field=p.field.filter(c=>c.hp>0);for(let side=0;side<2;side++){const d=S.dom[side];if(d&&d.ownerId&&!S.p[side].field.some(c=>c.hp>0&&c.id===d.ownerId)){S.dom[side]=null;ev.push({k:'txt',t:`🌌 ${d.nm} disappears because its user was defeated.`});}}for(let side=0;side<2;side++)syncLastStand(S,side,ev);for(let owner=0;owner<2;owner++){if(!S.p[owner].field.some(c=>c.id==='lh'&&c.hp>0)){for(const target of S.p[1-owner].field){if(target.fx&&(target.fx.preyOwner===owner||target.fx.preyOwner===undefined)){delete target.fx.prey;delete target.fx.preyOwner;}}}}const L=S.p.map(p=>p.hp<=0);
-if(L[0]||L[1])S.over={w:L[0]&&L[1]?-1:L[0]?1:0};else if(S.tc>(S.mode=='dmg'?16:60)){const a=S.p[0].dmg,b=S.p[1].dmg;S.over={w:a==b?-1:a>b?1:0,why:'limit',d:[a,b]};ev.push({k:'txt',t:`⏱ Turn limit reached. Winner decided by total damage taken (lower wins): P1 ${a} · P2 ${b}.`})}
+function fin(S,ev){for(const p of S.p){const dead=p.field.filter(c=>c.hp<=0).length;if(dead)p.ko=(p.ko||0)+dead;p.field=p.field.filter(c=>c.hp>0)}for(let side=0;side<2;side++){const d=S.dom[side];if(d&&d.ownerId&&!S.p[side].field.some(c=>c.hp>0&&c.id===d.ownerId)){S.dom[side]=null;ev.push({k:'txt',t:`🌌 ${d.nm} disappears because its user was defeated.`});}}for(let side=0;side<2;side++)syncLastStand(S,side,ev);for(let owner=0;owner<2;owner++){if(!S.p[owner].field.some(c=>c.id==='lh'&&c.hp>0)){for(const target of S.p[1-owner].field){if(target.fx&&(target.fx.preyOwner===owner||target.fx.preyOwner===undefined)){delete target.fx.prey;delete target.fx.preyOwner;}}}}const L=S.p.map(p=>p.hp<=0);
+const M=MODES[S.mode]||MODES.ko;
+if(L[0]||L[1])S.over={w:L[0]&&L[1]?-1:L[0]?1:0};
+else if(M.koGoal&&(((S.p[0].ko||0)>=M.koGoal)||((S.p[1].ko||0)>=M.koGoal))){const a=S.p[0].ko||0,b=S.p[1].ko||0;S.over={w:a==b?-1:a>b?1:0,why:'elim',d:[a,b]};ev.push({k:'txt',t:`☠️ Elimination! Characters lost — P1 ${a} · P2 ${b}.`})}
+else if(M.dmgGoal&&(S.p[0].dmg>=M.dmgGoal||S.p[1].dmg>=M.dmgGoal)){const a=S.p[0].dmg,b=S.p[1].dmg;S.over={w:a==b?-1:a>b?1:0,why:'rush',d:[a,b]};ev.push({k:'txt',t:`🎯 Damage Rush! Damage dealt — P1 ${b} · P2 ${a}.`})}
+else if(M.rounds&&S.tc>M.rounds*2){const a=S.p[0].dmg,b=S.p[1].dmg;S.over={w:a==b?-1:a>b?1:0,why:'limit',d:[a,b]};ev.push({k:'txt',t:`⏱ Round limit reached. Winner decided by total damage taken (lower wins): P1 ${a} · P2 ${b}.`})}
 if(S.over)ev.push({k:'over',w:S.over.w});return 1}
 function triggerAbject(S,actorSide,actorIndex,ev){const actor=S.p[actorSide]?.field?.[actorIndex];if(!actor||actor.hp<=0)return;const stacks=Math.min(5,Math.max(0,actor.fx?.abject||0));if(!stacks)return;actor.pendingAbjectBleed=Math.min(5,(actor.pendingAbjectBleed||0)+stacks);ev.push({k:'txt',t:`🩸 L’Abject: ${C[actor.id].n} will gain ${stacks} Bleed stack(s) at the start of their next turn.`});}
 function gainL(c,n){let m=n;if(c.fx.chup>0)m=Math.ceil(m*1.5);if(c.fx.chdn>0)m=Math.floor(m/2);const b=c.light;c.light=Math.min(c.id==='nr'?10:5,c.light+m);return c.light-b}
@@ -853,7 +865,7 @@ function recv(s2,ev){return new Promise(res=>{Q.push([s2,ev,res]);pump()})}
 async function pump(){if(busy)return;busy=true;while(Q.length){const[s2,ev,res]=Q.shift();
  if(G){for(const e of ev){try{await pe(e)}catch(err){console.error('animation error',err)}}}else{$('#menu').style.display='none';$('#game').style.display='flex'}
  G=s2;if(G.tc!==TC2){TC2=G.tc;DL=Date.now()+90000}try{render()}catch(err){console.error('render error',err)}
- if(G.over){$('#ot').textContent=G.over.w==-1?'DRAW!':G.over.w==SEAT?'🏆 VICTORY!':'💀 DEFEAT...';$('#os').textContent=G.over.why==='limit'&&G.over.d?('⏱ Turn limit reached — the player who took less total damage wins. Damage taken: You '+G.over.d[SEAT]+' · Opponent '+G.over.d[1-SEAT]+'.'):'';$('#over').style.display='flex'}res()}busy=false}
+ if(G.over){$('#ot').textContent=G.over.w==-1?'DRAW!':G.over.w==SEAT?'🏆 VICTORY!':'💀 DEFEAT...';$('#os').textContent=!G.over.d?'':G.over.why==='limit'?('⏱ Round limit reached — the player who took less total damage wins. Damage taken: You '+G.over.d[SEAT]+' · Opponent '+G.over.d[1-SEAT]+'.'):G.over.why==='elim'?('☠️ Elimination — characters lost: You '+G.over.d[SEAT]+' · Opponent '+G.over.d[1-SEAT]+'.'):G.over.why==='rush'?('🎯 Damage Rush — damage dealt: You '+G.over.d[1-SEAT]+' · Opponent '+G.over.d[SEAT]+'.'):'';$('#over').style.display='flex'}res()}busy=false}
 
 /* ============================================================================
    BOT AI
@@ -1296,9 +1308,9 @@ const SKILL_SPEC = {
     null, null,
     { type: 'Ultimate AoE Attack', damage: (c) => `${scaledDamage(c, 12)} to each enemy`,
       target: 'All living enemies',
-      effect: 'Deal heavy damage to every living enemy.',
-      chance: null, power: null, duration: null,
-      notes: 'Damage is not split among the enemies hit. If the enemy has no characters, the damage hits the enemy player directly.' },
+      effect: 'Deal a fixed 12 damage to every living enemy. Then roll once (70%): on success, ALL enemies gain Vulnerable and take +50% damage from every attack.',
+      chance: '70%', power: 'Vulnerable (+50% damage taken)', duration: turnsText(3),
+      notes: 'Costs 4 Light. The 12 damage is fixed (it ignores Saitama’s normal skill multiplier) but ATK Up ×1.5 / ATK Down ×0.5 still apply. Damage is not split: every target takes the full amount. The Vulnerable roll happens only if at least one enemy is actually hit, and it is a single roll that affects every enemy (even one that dodged). Each target’s own Protection (−40% damage), Mark (+3 damage) and Berserk (+25% damage) still apply, and a target in Evade stance may dodge. If the enemy has no characters, the 12 damage hits the enemy player directly.' },
     null
   ],
 
@@ -1544,7 +1556,8 @@ $('#mei').innerHTML=info(me)+`<span><button id=bd ${my&&G.tc>1&&!G.p[me].did&&G.
 $('#of').innerHTML=G.p[op].field.map((c,i)=>chH(op,i,c)).join('')||'<small>— Empty —</small>';
 $('#mf').innerHTML=G.p[me].field.map((c,i)=>chH(me,i,c)).join('')||'<small>— Empty —</small>';
 const dm=[0,1].map(s=>G.dom[s]?`<span class=dm2 data-domain="${s}" data-name="${hEsc(G.dom[s].nm)}" data-turns="${G.dom[s].t}" data-power="${G.dom[s].pw}">🌌 ${G.dom[s].nm} (${s==me?'You':'Enemy'}) ${G.dom[s].t}t · ${G.dom[s].pw}</span>`:'').join('');
-$('#mid').innerHTML=`<div>Round ${Math.ceil(G.tc/2)} · ${G.mode=='dmg'?'Damage Race':'KO'} · ${my?'<b style="color:var(--b)">Your Turn</b>':'Enemy Turn'} · ⏱ <b id=tm>${Math.max(0,Math.ceil((DL-Date.now())/1000))}s</b> ${dm}</div>`;
+const MD=MODES[G.mode]||MODES.ko,mprog=MD.koGoal?` · ☠️ KOs ${G.p[op].ko||0}/${MD.koGoal} (You) · ${G.p[me].ko||0}/${MD.koGoal} (Enemy)`:MD.dmgGoal?` · 🎯 Dealt ${G.p[op].dmg}/${MD.dmgGoal} (You) · ${G.p[me].dmg}/${MD.dmgGoal} (Enemy)`:'';
+$('#mid').innerHTML=`<div>Round ${Math.ceil(G.tc/2)}${MD.rounds?'/'+MD.rounds:''} · ${MD.icon} ${MD.n}${mprog} · ${my?'<b style="color:var(--b)">Your Turn</b>':'Enemy Turn'} · ⏱ <b id=tm>${Math.max(0,Math.ceil((DL-Date.now())/1000))}s</b> ${dm}</div>`;
 const c=U.c!=null&&my?G.p[me].field[U.c]:null;
 $('#act').innerHTML=c?(()=>{const disabledAll=c.hp<=0||c.acted||c.fx.stun>0||c.fx.freeze>0;const globalReason=c.hp<=0?'Character is down':c.acted?'Character has already acted':c.fx.stun>0?'Stunned':c.fx.freeze>0?'Frozen':'', chargeReason=globalReason||(c.fx.root>0?'Rooted — cannot Charge':c.fx.thunder>0?'Thunder — can only Guard or Charge':'');const defReason=globalReason||(c.fx.thunder>0?'Thunder — can only Guard or Charge':c.fx.root>0&&DF[c.id]==='evade'?'Rooted — cannot Evade':'');return `<button data-a=pc data-c="${U.c}" class="${U.p=='pc'?'pri':''} ${chargeReason?'locked':''}" ${chargeReason?'disabled':''} title="${chargeReason||'Charge: gain Light next turn'}">${chargeReason?'🔒':'⚡'} Charge${chargeReason?' · LOCKED':''}</button><button data-a=pd data-c="${U.c}" class="${U.p=='pd'?'pri':''} ${defReason?'locked':''}" ${defReason?'disabled':''} title="${defReason||'Use defensive action'}">${defReason?'🔒 ':''}${DN[DF[c.id]]}${defReason?' · LOCKED':''}</button>`+skillIndices(c.id).map(i=>{const k=sk(c.id,i),reason=c.hp<=0?'Character is defeated':c.acted?'Already acted this turn':c.fx.stun>0?'Stun prevents actions':c.fx.freeze>0?'Freeze prevents this action':c.fx.sleep>0?'Sleep prevents this action':c.fx.lightlock>0?'Unable to act this turn':(c.id==='ch'&&c.form==='Monster Point'&&i!==1)?'Monster Point: only Reindeer Kick can be used':c.light<k.c?`Need ${k.c} Light (you have ${c.light})`:c.fx.thunder>0?'Thunder prevents using Skills':c.fx.silence>0&&k.t!=='sup'?'Silence prevents this Skill':G.tc<=1&&k.t!=='sup'?'Unavailable on Turn 1':'';const lightLock=!!reason&&c.light<k.c;if(c.id==='tdo'&&i===0){const bwLocked=!!reason;return `<button data-a="p0" class="${U.p==='p0'?'pri ':''}${bwLocked?'skill-locked':''}" ${bwLocked?'disabled':''} title="Support Skill: activate Boogie Woogie to gain Protection this turn and raise the Passive trigger limit from 1 to 2 this turn. No target selection required.">Boogie Woogie <span class="skill-state">${bwLocked?'LOCKED':`PASSIVE LIMIT ${c.boogieSkillUsed?2:1} / TURN`}</span></button>`};return `<button data-a=p${i} class="${U.p=='p'+i?'pri':''} ${reason?'skill-locked':''}" title="${hEsc(reason||C[c.id].s[i])}">${reason?'🔒 ':''}${TN[k.t]} ${hEsc(c.id==='diavolo'&&i===2&&(c.fx.timeerase||0)>0?'Bleed Blind':C[c.id].s[i])}${reason?`<span class="skill-state">${lightLock?`NEED ${k.c} LIGHT`:'LOCKED'}</span>`:''}</button>`}).join('')})():'<small>Select your character to command</small>';
 if(U.t&&U.t.multi){
@@ -1681,7 +1694,7 @@ function hoverStatus(el){
 }
 function hoverCard(h){
  if(h.k==='c'){
-  const d=C[h.id],fake=ch(h.id);return {...hoverCharacter(fake,'CHARACTER CARD'),sub:`CHARACTER CARD · DEPLOY COST ✦ ${CC[h.id]}`,body:`<div class="ht-stats"><div class="ht-stat"><b>❤️ ${d.hp}</b><span>Base HP</span></div><div class="ht-stat"><b>⚔️ ${d.atk}</b><span>Base ATK</span></div><div class="ht-stat"><b>✦ ${CC[h.id]}</b><span>Deploy Cost</span></div></div><div class="ht-section">Skill Preview</div>${skillIndices(h.id).map(i=>{const k=sk(h.id,i),dm=Math.round(d.atk*k.m);return `<div class="ht-skill"><div class="ht-sicon">${TN[k.t]}</div><div><b>${hEsc(d.s[i])}</b><small>${k.c===0?'Free':`✦ ${k.c} Light`}${k.m?` · Base ${dm} DMG`:''}</small><small>${hEsc(({melee:'Close-range attack',bullet:'Ranged attack',domain:'Domain ability',ult:'Ultimate attack',sup:'Support buff',aoe:'Area attack',three:'Close-range attack (3 targets)',ultaoe:'Ultimate area attack'})[(h.id==='st'||h.id==='kira')&&i===3?'ultaoe':k.t]||k.t)}</small></div></div>`}).join('')}`};
+  const d=C[h.id],fake=ch(h.id);return {...hoverCharacter(fake,'CHARACTER CARD'),sub:`CHARACTER CARD · DEPLOY COST ✦ ${CC[h.id]}`,body:`<div class="ht-stats"><div class="ht-stat"><b>❤️ ${d.hp}</b><span>Base HP</span></div><div class="ht-stat"><b>⚔️ ${d.atk}</b><span>Base ATK</span></div><div class="ht-stat"><b>✦ ${CC[h.id]}</b><span>Deploy Cost</span></div></div><div class="ht-section">Skill Preview</div>${skillIndices(h.id).map(i=>{const k=sk(h.id,i),dm=(h.id==='st'&&i===3)?12:Math.round(d.atk*k.m);return `<div class="ht-skill"><div class="ht-sicon">${TN[k.t]}</div><div><b>${hEsc(d.s[i])}</b><small>${k.c===0?'Free':`✦ ${k.c} Light`}${k.m?` · Base ${dm} DMG`:''}</small><small>${hEsc(({melee:'Close-range attack',bullet:'Ranged attack',domain:'Domain ability',ult:'Ultimate attack',sup:'Support buff',aoe:'Area attack',three:'Close-range attack (3 targets)',ultaoe:'Ultimate area attack'})[(h.id==='st'||h.id==='kira')&&i===3?'ultaoe':k.t]||k.t)}</small></div></div>`}).join('')}`};
  }
  const d=E[h.id];return {col:'#35e0ff',em:d.e,title:d.n,sub:`EFFECT CARD · COST ✦ ${d.c}`,body:`<div class="ht-section">Card Effect</div><div style="font-size:13px;line-height:1.65">${hEsc(ED[h.id]||'Special effect')}</div><div class="ht-tags"><span class="ht-tag">✦ ${d.c} Light cost</span><span class="ht-tag">${d.tg?'Requires target':'No target needed'}</span></div><div class="ht-section">How to use</div><div>Click this card in your hand to inspect it, then choose <b>Use Card</b>.${d.tg?' Select a friendly character when prompted.':''}</div>`};
 }
@@ -1977,8 +1990,8 @@ function finishLiveCoach(){tutorialPause=false;tutorialBattle=false;clearCoachGl
 $('#coachNext').addEventListener('click',()=>{if(liveStep<LIVE_STEPS.length-1){liveStep++;renderLiveCoach()}else finishLiveCoach()});$('#coachClose').addEventListener('click',finishLiveCoach);document.addEventListener('click',e=>{if(!tutorialBattle||$('#liveCoach').style.display==='none')return;setTimeout(()=>{const x=LIVE_STEPS[liveStep];const targets=x.target.split(',').map(q=>$(q)).filter(Boolean);coachTarget=targets[0]||null;clearCoachGlow();targets.forEach(t=>t.classList.add('tut-glow'));if(liveStep===2){const card=[...$('#hand').querySelectorAll('.cd:not(.e)')].find(c=>!c.classList.contains('no'))||$('#hand').querySelector('.cd:not(.e)');if(card){card.classList.add('tut-glow');coachTarget=card}}placeCoach(coachTarget)},100)});window.addEventListener('resize',()=>{if(tutorialBattle&&$('#liveCoach').style.display!=='none')placeCoach(coachTarget)});
 $('#tutorialBtn').addEventListener('click',openTutorial);$('#tutClose').addEventListener('click',closeTutorial);$('#tutorial').addEventListener('click',e=>{if(e.target===$('#tutorial'))closeTutorial()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#tutorial').style.display==='flex')closeTutorial()});
 
-$('#m1').onclick=()=>{MODE='ko';$('#m1').className='pri';$('#m2').className=''};
-$('#m2').onclick=()=>{MODE='dmg';$('#m2').className='pri';$('#m1').className=''};
+function pickMode(m){MODE=m;document.querySelectorAll('#modeBox button').forEach(b=>b.classList.toggle('pri',b.dataset.mode===m));$('#modeDesc').textContent=MODES[m].d}
+document.querySelectorAll('#modeBox button').forEach(b=>b.onclick=()=>pickMode(b.dataset.mode));pickMode(MODE);
 $('#bot').onclick=()=>{BOT=true;HOST=true;SEAT=0;startGame()};
 document.querySelectorAll('#botLevel button').forEach(b=>b.onclick=()=>{BOT_LEVEL=b.dataset.lv;document.querySelectorAll('#botLevel button').forEach(x=>x.classList.toggle('pri',x===b));toast('🤖 Bot: '+({easy:'Easy',normal:'Normal',hard:'Hard'})[BOT_LEVEL],1200)});
 $('#mk').onclick=()=>online(String(1000+rnd(9000)),true);
