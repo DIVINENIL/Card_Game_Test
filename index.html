@@ -370,7 +370,7 @@ const sk=(id,n)=>CUSTOM_SKILLS[id]?.[n]||skBase(id,n);
 /* ============================================================================
    DEPLOY COST, SKILL LISTS, SKILL EFFECTS (X), DEFENSE STYLES, STATUS NAMES
    ============================================================================ */
-const CC = { kira:2, doppio:2, diavolo:2, lh: 4, gm: 4, sh: 3, gj: 3, nr: 2, lf: 2, lv: 1, st: 3, gk: 2, yj: 2, sk: 3, tn: 2, kk: 2, ic: 3, kl: 2, td: 2, ch: 1, pw: 1, pwg: 5, tdo: 2, lrs: 3 };
+const CC = { kira:2, doppio:2, diavolo:2, lh: 5, gm: 4, sh: 3, gj: 3, nr: 2, lf: 2, lv: 1, st: 3, gk: 2, yj: 2, sk: 3, tn: 2, kk: 2, ic: 3, kl: 2, td: 2, ch: 1, pw: 1, pwg: 5, tdo: 2, lrs: 3 };
 const SKS = { 1: [0, 1, 2], 2: [0, 1, 2, 3], 3: [0, 1, 2, 3, 4], 4: [0, 1, 2, 3, 4] };
 const skillIndices=id=>id==='kira'?[0,1,2,3]:id==='diavolo'?[0,1,2,3]:id==='doppio'?[0,1,2]:['ch','pw','pwg','tdo'].includes(id)?[0,1,2,3,4]:(SKS[CC[id]]||[0,1,2,3,4]);
 const X = {
