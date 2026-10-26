@@ -330,7 +330,7 @@ const C = {
       s: ['Crimson Nail', 'Perk Up', "Don't Get Hurty", 'I’ll End You', 'The Crimson God'] },
   pwg: { n: 'The Crimson God - Buffet', e: '🩸', col: '#a50019', hp: 50, atk: 7,
       s: ['Je m’expulse', 'Le Manque-à-être', 'Le Point de Capiton', 'La Jouissance', 'La Castration'] },
-  tdo: { n: 'Aoi Todo', e: '👏', col: '#b67b55', hp: 23, atk: 6,
+  tdo: { n: 'Aoi Todo', e: '👏', col: '#b67b55', hp: 28, atk: 6,
       s: ['Boogie Woogie', 'Divergent Beat', 'Brotherly Support', 'Clap and Strike', 'Black Flash'] },
   lrs: { n: 'Le Rouge Senior Staff', e: '🩸', col: '#8d1725', hp: 19, atk: 5,
       s: ['Blood Strike', 'Blood Strike', 'Blood Strike', 'Blood Strike', 'Blood Strike'] },
@@ -632,7 +632,7 @@ function customSkill(S,s,a,ev){
    if(n===0)attack(enemy,5);
    if(n===1){attack(enemy,3);if(enemy&&enemy.hp>0){enemy.fx.bombmark=Math.max(enemy.fx.bombmark||0,999);ev.push({k:'sts',L:[{s:1-s,i:op.field.indexOf(enemy),k:'bombmark'}]});}}
    if(n===2){attack(enemy,12);if(enemy&&enemy.hp>0){enemy.burn=(enemy.burn||0)+4;enemy.fx.burn=Math.max(enemy.fx.burn||0,1);ev.push({k:'sts',L:[{s:1-s,i:op.field.indexOf(enemy),k:'burn'}]});}}
-   if(n===3){const living=op.field.map((x,i)=>({x,i})).filter(z=>z.x.hp>0);const count=Math.max(1,living.length);const hits=living.map(({x,i})=>({ti:i,dmg:Math.max(1,Math.round(4/count)),miss:0,g:0}));if(!living.length){hits.push({ti:-1,dmg:4,miss:0,g:0});hitPlayerDirect(S,1-s,4,ev)}ev.push({k:'aoe',s,i:a.c,ts:1-s,nm:'Bites the Dust',hits,ultAoe:1});for(const z of living){if(z.x.hp>0){z.x.fx.bombmark=Math.max(z.x.fx.bombmark||0,999);ev.push({k:'sts',L:[{s:1-s,i:z.i,k:'bombmark'}]});}}c.hp=c.mhp;ev.push({k:'healnum',s,i:a.c,v:c.mhp});ev.push({k:'txt',t:'💣 Bites the Dust: Kira returns to full HP.'});}
+   if(n===3){const living=op.field.map((x,i)=>({x,i})).filter(z=>z.x.hp>0);const count=Math.max(1,living.length);const hits=living.map(({x,i})=>({ti:i,dmg:Math.max(1,Math.round(8/count)),miss:0,g:0}));if(!living.length){hits.push({ti:-1,dmg:8,miss:0,g:0});hitPlayerDirect(S,1-s,8,ev)}ev.push({k:'aoe',s,i:a.c,ts:1-s,nm:'Bites the Dust',hits,ultAoe:1});for(const z of living){if(z.x.hp>0){z.x.fx.bombmark=Math.max(z.x.fx.bombmark||0,999);ev.push({k:'sts',L:[{s:1-s,i:z.i,k:'bombmark'}]});}}c.hp=c.mhp;ev.push({k:'healnum',s,i:a.c,v:c.mhp});ev.push({k:'txt',t:'💣 Bites the Dust: Kira returns to full HP.'});}
  }else if(c.id==='doppio'){
    if(n===0)attack(enemy,5,3,1,.45);
    if(n===1)attack(enemy,8,1,3,.85);
@@ -1364,7 +1364,7 @@ const SKILL_SPEC = {
         effect: 'Deal ranged damage to one enemy and inflict Burn 4 for 1 turn.',
         chance: '100%', power: '4', duration: turnsText(1),
         notes: 'Ignores Evade.', passive },
-      { type: 'Ultimate AoE Attack', damage: (c) => `${scaledDamage(c, 4)} (split among the enemies hit)`, target: 'All living enemies',
+      { type: 'Ultimate AoE Attack', damage: (c) => `${scaledDamage(c, 8)} (split among the enemies hit)`, target: 'All living enemies',
         effect: 'Deal damage to every living enemy and place a Bomb Mark on each. After it resolves, Kira is restored to full HP.',
         chance: '100%', power: null, duration: 'Until detonated',
         notes: bombMark + ' If the enemy has no characters, the damage hits the enemy player directly.', passive }
