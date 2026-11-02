@@ -1958,7 +1958,7 @@ function highlightEffects(root){
  const re=new RegExp('(?<![\\p{L}\\p{N}_])('+escaped.join('|')+')(?![\\p{L}\\p{N}_])','giu');
  const byLower=new Map();for(const x of all){const key=x.term.toLowerCase();const old=byLower.get(key);if(!old || priority[x.type]<priority[old])byLower.set(key,x.type);}
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
-  if(!n.nodeValue.trim()||n.parentElement?.closest('.fx-mark,script,style,button,input,textarea,select,h1,h2,h3,h4,h5,h6,b,strong,.detail-name,.detail-subhead,.panel-title,.deck-heading,.lib-card-info,.ht-title,.ht-sub,.ht-section,.detail-type,.ht-skill,.ht-skill b,.detail-skill b,.skill-detail-title,.skill-detail-meta,.skillInspect b,.inspectSkills b,.passive-title,.skill-title'))return NodeFilter.FILTER_REJECT;
+  if(!n.nodeValue.trim()||n.parentElement?.closest('.trait-bullets small,.inspectSkills small,.inspectStats small,.detail-passive,.deck-alt-form-copy,.fx-detail-inline,.defense-skill-copy,.fx-mark,script,style,button,input,textarea,select,h1,h2,h3,h4,h5,h6,b,strong,.detail-name,.detail-subhead,.panel-title,.deck-heading,.lib-card-info,.ht-title,.ht-sub,.ht-section,.detail-type,.ht-skill,.ht-skill b,.detail-skill b,.skill-detail-title,.skill-detail-meta,.skillInspect b,.inspectSkills b,.passive-title,.skill-title,.defense-skill-heading,.defense-skill-panel > .defense-skill-heading'))return NodeFilter.FILTER_REJECT;
   return NodeFilter.FILTER_ACCEPT;
  }});
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
@@ -1972,7 +1972,7 @@ function highlightEffects(root){
 function inspectAmmoType(c){return c&&c.ammoType==='savage'?'savage':'tigermark'}
 function leiTraits(c){return `<div class=inspectSkills><b>Passives</b><div><b>The Thumb’s Officer, Capo IIII</b><small>On deployment, gain 6 Tigermark Rounds. Guarding or using an Ultimate schedules a reload for the start of Lei Heng’s next turn. Every third reload grants 6 Savage Tigermark Rounds instead.</small></div><div><b>Ten Blades of the East</b><small>Whenever Lei Heng reloads, gain 50% ATK Up for that turn.</small></div><div><b>Chosen Prey</b><small>At the start of each turn, mark the living enemy who has dealt the most damage to Lei Heng. Prey is not applied until an enemy has damaged Lei Heng. If Lei Heng defeats Prey, all enemy characters receive 50% ATK Down.</small></div><div><b>Tiantui Star [天退星]</b><small>When HP falls below 60%, gain Tiantui Star [天退星] permanently. Below 40% HP, upgrade it to Shin (心) - Tiantui Star [天退星] permanently. Tiantui Star [天退星]: +5% damage per 20% HP lost (maximum +20%). Shin: +5% damage per 10% HP lost (maximum +30%).</small></div><div><b>Current Ammo</b><small>${fxIcon('tigermark')} ${hEsc(SN[inspectAmmoType(c)]||'Tigermark Round')} × 6 maximum. Ammo is spent automatically by Lei Heng’s Skills when available.</small></div></div>`;}
 function uniqueTrait(id,c){
-  if(id==='sasuke')return `<div class=inspectSkills><b>Passive · Dojutsu</b><div class=trait-bullets><small>• At the start of Sasuke’s turn, if he has 2 or more Light, gain Mangekyo Sharingan.</small><small>• If he has 3 or more Light, also gain Susanoo.</small><small>• If he has 5 or more Light, also gain Rinnegan.</small><small>• Mangekyo Sharingan: each attacking Skill has a 25% chance to apply 1 Amaterasu Stack.</small><small>• Susanoo: take 25% less damage and deal 10% more damage.</small><small>• Rinnegan: when an enemy activates a Defense Skill against Sasuke’s attack, cancel that defense and pull the target into close range. If the attack was Ranged, it becomes Melee when this effect triggers.</small></div></div>`;
+  if(id==='sasuke')return `<div class=inspectSkills><b>Passive · Dojutsu</b><div class=trait-bullets><small>• At the start of Sasuke’s turn, if he has 2 or more Light, gain Mangekyo Sharingan.</small><small>• If he has 3 or more Light, also gain Susanoo.</small><small>• If he has 5 or more Light, also gain Rinnegan.</small><small>• <b>Mangekyo Sharingan</b>: each attacking Skill has a 25% chance to apply 1 Amaterasu Stack.</small><small>• Susanoo: take 25% less damage and deal 10% more damage.</small><small>• Rinnegan: when an enemy activates a Defense Skill against Sasuke’s attack, cancel that defense and pull the target into close range. If the attack was Ranged, it becomes Melee when this effect triggers.</small></div></div>`;
   if(id==='kurumi')return `<div class=inspectSkills><b>Passive · Zafkiel’s Bullets</b><div class=trait-bullets><small>• Whenever Kurumi attacks, she has a 70% chance to fire 1 random bullet.</small><small>• <b>1. Aleph — Positive:</b> Gain ATK Up for 1 turn on her next turn.</small><small>• <b>2. Bet — Negative:</b> Apply Vulnerable for 2 turns to the target.</small><small>• <b>3. Gimel — Negative:</b> Apply ATK Down for 1 turn on the target’s next turn.</small><small>• <b>4. Dalet — Positive:</b> Restore 40% of Kurumi’s maximum HP.</small><small>• <b>5. He — Positive:</b> Gain automatic Evade with a 50% chance to dodge for 3 turns.</small><small>• <b>6. Vav — Negative:</b> Apply Silence for 2 turns to the target.</small><small>• <b>7. Zayin — Negative:</b> 50% chance to Stun the target.</small><small>• <b>8. Het — Positive:</b> Summon a Temporal Clone with half of Kurumi’s current Max HP. It is not a normal field unit, echoes her Gun Shot, and disappears after 2 of Kurumi’s turns; Kurumi then gains 1 Light.</small><small>• <b>9. Tet:</b> All other living Kurumi units, including her Temporal Clone, echo Gun Shot against the same target.</small><small>• <b>10. Yod:</b> Steal 1 Light from the target and give it to Kurumi.</small><small>• <b>11. Yod Aleph — Negative:</b> Stun the target and make it Untargetable for 2 turns.</small></div></div>`;
   if(id==='gku')return `<div class=inspectSkills><div><b>Passive · Ultra Instinct</b><small>While active, <b>Special Evade:</b> Goku automatically dodges every incoming attack (100%): Melee, Ranged, AoE and Ultimate, including attacks that normally ignore Evade. A dodged attack deals no damage and applies none of its on-hit effects. He also dodges Domain damage (so a Domain cannot apply its damage-based effects to him). This works even while Goku is Stunned, Frozen, Silenced or otherwise unable to act. Each dodge counters the attacker for half of Goku’s ATK. He cannot be defeated while Ultra Instinct is active: damage from statuses or other sources always leaves him at 1 HP. Lasts 3 turns, then Goku returns to normal form.</small></div></div>`;
   if(id==='lrs'){const bd=(c&&c.atk)||C.lrs.atk;return `<div class=inspectSkills><b>Skills &amp; Abilities</b><div class=skillInspect><b>Blood Strike (automatic)</b><small>Base damage: ${bd} (equal to its ATK; ATK Up/Down apply). Cost: 0 Light. At the end of its owner’s turn it attacks a random living enemy. Has a 50% chance to inflict Bleed 2 for 1 round. If the enemy has no living character on the field, it hits the enemy player’s HP directly.</small></div></div><div class=inspectSkills><b>Passive · Bloodbound Servitor</b><div><small>Summoned only when Pouvoirs de la vie kills an ally. AI-controlled: cannot be drawn, deployed, selected or commanded (no Skill, Charge or Guard). If it dies or is drained to death, it is removed permanently and cannot summon another copy.</small></div></div>`;}
@@ -2056,7 +2056,7 @@ function hoverCard(h){
 const FX_TERM_KEYS={
  'brother':'brother','bleed':'bleed','blind':'blind','blinded':'blind','burn':'burn','poison':'poison','frostbite':'frostbite','freeze':'freeze','stun':'stun','silence':'silence','root':'root','vulnerable':'vuln','vuln':'vuln','damage down':'down','weaken':'weaken','heal block':'healblock','healblock':'healblock','down':'down','charge down':'chdn',
  'atk up':'up','attack up':'up','damage up':'up','atk down':'down','attack down':'down','charge up':'chup','regen':'regen','protected':'prot','protection':'prot','barrier':'barrier','lifesteal':'lifesteal','focus':'focus','combo':'combo','black flash':'blackflash','gear shift':'gear','breathing focus':'breath','chidori charge':'chidori','shadow clone':'clone','temporal clone':'clone','bankai':'bankai','godspeed':'godspeed','berserk':'berserk','mark':'mark','slash mark':'slash','heat':'heat','thunder':'thunder','up':'up',
- 'counter':'counter','guard':'guard','evade':'evade','cleanse':'cleanse','charge':'charge','domain':'domain','effect':'effect'
+ 'guard':'guard','evade':'evade','cleanse':'cleanse','charge':'charge','domain':'domain','effect':'effect'
 };
 function effectTriggerText(key){
  const map={mangekyo:'Gained at the start of Sasuke’s turn while he has 2+ Light. Attacking Skills have a 25% chance to apply 1 Amaterasu Stack.',susanoo:'Gained at the start of Sasuke’s turn while he has 3+ Light. Reduces incoming damage by 25% and increases outgoing damage by 10%.',rinnegan:'Gained at the start of Sasuke’s turn while he has 5+ Light. Cancels an enemy Defense Skill against Sasuke’s attack and pulls that enemy into close range; Ranged attacks become Melee when this triggers.',amaterasu:'Applied by Sasuke’s Guard while Mangekyo Sharingan is active, by Amaterasu, or by Mangekyo’s attack chance. Deals damage equal to current stacks at the affected character’s turn end and never expires naturally.',clone:'Created by Kurumi’s Het bullet. Has half of Kurumi’s Max HP, echoes Gun Shot, is not counted as a normal field unit, disappears after 2 of Kurumi’s turns, and grants the real Kurumi 1 Light.',focus:'Gained from effect cards or Skills. Stacks apply to the owner’s next attack and are consumed by it.',combo:'Gained from effect cards or the Brother synergy. Grows with each consecutive single-target attack by the owner.',breath:'Gained from Skills. Stacks apply to the owner’s next attack and are consumed by it.',chidori:'Gained from Kakashi’s Skills. Applies to the owner’s next single-target attack and is consumed by it.',blind:'Applied by Diavolo’s Blind Attack (70% chance) and Bleed Blind to the chosen target for 3 turns; a successful Evade prevents it.',burn:'Applied only when the Skill hits successfully; a successful Evade prevents this status.',bleed:'Applied only when the Skill hits successfully; a successful Evade prevents this status.',stun:'Applied only when the Skill hits successfully and the chance roll succeeds; a successful Evade prevents this status.',prey:'Applied at the start of a turn only to a living enemy that has already dealt damage to Lei Heng.',down:'Reduces the affected character’s outgoing attack damage by 50%. See Chosen Prey for its team-wide trigger.',slash:'Ichigo’s Black Slash Mark. Applied by its associated Skill only when that Skill hits successfully. It empowers Ichigo’s next eligible strike.',cursedslash:'Sukuna’s mark empowers his next Skill against the marked target by +3 damage, then is consumed.',tigermark:'Lei Heng’s unique ammo. Gained by deployment/reload; spent by eligible Skills.',savage:'Lei Heng’s unique ammo. Gained every third reload; spent by eligible Skills for bonus damage and Burn.',shin:'Lei Heng’s permanent damage-scaling form, unlocked below 40% HP.',tiantui:'Lei Heng’s permanent damage-scaling status, unlocked below 60% HP.',void:'Void: Infinity blocks ranged attacks only for 2 turns. Ultimate attacks, AOE attacks, and Domain effects can bypass it.'};
@@ -2134,7 +2134,7 @@ function scheduleHoverHide(){
 // Each matched word gets its own clickable mark; clicking ordinary prose does nothing.
 (function installInlineEffectHighlights(){
  const scopes='.trait-bullets small,.inspectSkills small,.inspectStats small,.detail-passive,.deck-alt-form-copy,.fx-detail-inline,.defense-skill-copy';
- const skip='script,style,.fx-mark,.bg,[data-effect],.fx-inspect-icon,button';
+ const skip='script,style,.fx-mark,.bg,[data-effect],.fx-inspect-icon,button,b,strong,.ht-title,.ht-sub,.ht-section,.panel-title,.detail-name,.detail-subhead,.passive-title,.skill-title';
  function makeTerms(){
   const pairs=[];
   if(typeof SN!=='undefined') for(const [key,label] of Object.entries(SN)){
@@ -2462,7 +2462,7 @@ initDeckBuilder();
   const seen=new Set();return a.filter(([v,k])=>{const z=v.toLowerCase();if(seen.has(z))return false;seen.add(z);return true}).sort((a,b)=>b[0].length-a[0].length);
  }
  function decorate(root){if(!root||!root.querySelectorAll)return;const terms=entries();const nodes=[];
-  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){if(!n.nodeValue||!n.nodeValue.trim())return NodeFilter.FILTER_REJECT;const p=n.parentElement;if(!p||p.closest('.fx-mark,.fx-inspect-icon,button,script,style,textarea,input,#hoverTip'))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){if(!n.nodeValue||!n.nodeValue.trim())return NodeFilter.FILTER_REJECT;const p=n.parentElement;if(!p||p.closest('.fx-mark,.fx-inspect-icon,button,script,style,textarea,input,#hoverTip,.defense-skill-heading,.inspectSkills > b,.inspectStats > b,.skill-title,.skill-detail-title,.detail-name,.detail-subhead,.panel-title,.deck-heading'))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});
   while(walker.nextNode())nodes.push(walker.currentNode);
   for(const node of nodes){let value=node.nodeValue;const matches=[];for(const [label,key] of terms){const re=new RegExp('(^|[^\\p{L}\\p{N}])('+esc(label)+')(?=$|[^\\p{L}\\p{N}])','giu');let m;while((m=re.exec(value))){const start=m.index+m[1].length;matches.push({start,end:start+m[2].length,key,label:m[2]});}}
    if(!matches.length)continue;matches.sort((a,b)=>a.start-b.start||b.end-a.end);const chosen=[];let end=-1;for(const m of matches){if(m.start>=end){chosen.push(m);end=m.end;}}
@@ -2474,6 +2474,45 @@ initDeckBuilder();
  const mo=new MutationObserver(records=>{for(const r of records){for(const n of r.addedNodes){if(n.nodeType!==1)continue;if(n.matches?.(ROOTS))decorate(n);n.querySelectorAll?.(ROOTS).forEach(decorate);}}});
  mo.observe(document.body,{childList:true,subtree:true});
  document.addEventListener('click',e=>{const mark=e.target.closest?.('.fx-mark[data-effect]');if(!mark)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();const r=mark.getBoundingClientRect();showEffectTerm(mark,r.left,r.bottom,true,mark);},true);
+})();
+</script>
+<script>
+// Final correction for Sasuke passive: prevent pronoun "he" from being treated as Kurumi's He bullet,
+// and enforce the intended semantic colors for Sasuke's three Dojutsu effects and Amaterasu.
+(()=>{
+ const sasukeScopes='.trait-bullets,.inspectSkills,.inspectStats,.defense-skill-copy,.detail-passive';
+ const unwrap=el=>{const p=el.parentNode;if(!p)return;while(el.firstChild)p.insertBefore(el.firstChild,el);p.removeChild(el);};
+ function fix(root=document){
+  const roots=[];
+  if(root.matches?.(sasukeScopes))roots.push(root);
+  root.querySelectorAll?.(sasukeScopes).forEach(x=>roots.push(x));
+  for(const box of roots){
+   // A standalone "he" is ordinary English grammar, never an Effect name.
+   box.querySelectorAll('.fx-mark').forEach(mark=>{
+    const label=(mark.textContent||'').trim().toLowerCase();
+    if(label==='he'){unwrap(mark);return;}
+    let key=null;
+    if(label==='mangekyo sharingan')key='mangekyo';
+    else if(label==='susanoo')key='susanoo';
+    else if(label==='rinnegan')key='rinnegan';
+    else if(label==='amaterasu')key='amaterasu';
+    if(key){mark.classList.remove('fx-neu','fx-neg','fx-pos','fx-neutral','fx-inline-effect');mark.classList.add('fx-mark',key==='amaterasu'?'fx-neg':'fx-pos');mark.dataset.effect=key;mark.dataset.effectName=key;}
+   });
+   // Safety net: highlight the four Sasuke effect names only as complete phrases,
+   // including the Guard description; do not match fragments or the pronoun "he".
+   const terms=[['Mangekyo Sharingan','mangekyo','fx-pos'],['Susanoo','susanoo','fx-pos'],['Rinnegan','rinnegan','fx-pos'],['Amaterasu','amaterasu','fx-neg']];
+   const walker=document.createTreeWalker(box,NodeFilter.SHOW_TEXT,{acceptNode(n){if(!n.nodeValue?.trim()||n.parentElement?.closest('.fx-mark,script,style,button,input,textarea,select'))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});
+   const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+   for(const node of nodes){const value=node.nodeValue;const re=/(?<![\p{L}\p{N}_])(Mangekyo Sharingan|Susanoo|Rinnegan|Amaterasu)(?![\p{L}\p{N}_])/giu;let m,last=0;const frag=document.createDocumentFragment();let found=false;
+    while((m=re.exec(value))){found=true;if(m.index>last)frag.append(document.createTextNode(value.slice(last,m.index)));const [label,key,cls]=terms.find(t=>t[0].toLowerCase()===m[0].toLowerCase());const span=document.createElement('span');span.className='fx-mark '+cls;span.dataset.effect=key;span.dataset.effectName=key;span.dataset.turns='1';span.textContent=m[0];span.title='Click to view effect details';span.setAttribute('role','button');span.tabIndex=0;frag.append(span);last=m.index+m[0].length;}
+    if(found){if(last<value.length)frag.append(document.createTextNode(value.slice(last)));node.parentNode.replaceChild(frag,node);}
+   }
+  }
+ }
+ const run=()=>fix(document);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+ const observer=new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)if(n.nodeType===1)fix(n);});
+ observer.observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 </body></html>
