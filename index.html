@@ -1337,8 +1337,10 @@ function botEval(S, s) {
   const myAtk = atkSum(me), foeAtk = atkSum(op);
   let v = (me.hp - op.hp) * BOT_W.playerHp;
   v += (me.light - op.light) * BOT_W.playerLight;
-  const handValue = p => p.hand.reduce((n, cd) => n + (cd.k === 'c' ? BOT_W.charCard : BOT_W.effCard), 0);
-  v += handValue(me) - handValue(op);
+  // The Bot may evaluate its own hand, but must not inspect the human's
+  // concealed hand (including card identities or card types).
+  const ownHandValue = me.hand.reduce((n, cd) => n + (cd.k === 'c' ? BOT_W.charCard : BOT_W.effCard), 0);
+  v += ownHandValue;
   for (const c of me.field) {
     if (c.hp <= 0) continue;
     const cv = botCharValue(c, foeAtk);
@@ -1468,15 +1470,46 @@ function botDecide(S, s, opts = {}) {
   if (scored.length > 1 && scored[1].gain > scored[0].gain * .7 && Math.random() < .15) return scored[1].a;   // normal
   return scored[0].a;
 }
-function botReply(S, s, a) {         // value for seat s after action a, assuming the foe then plays its best single skill
+/* Public-information-only reply candidates for hard-mode lookahead.
+   Deliberately does not inspect the opponent's hand, pending UI selection,
+   Charge flag (pc), or Defense stance (st). Charge/Defense are considered by
+   the AI only on its own turn, and are observed on the human side only after
+   A() has committed them to the game state. */
+function botPublicSkillReplies(S, s) {
+  const p = S.p[s], o = S.p[1 - s], out = [];
+  const foes = o.field.map((x, i) => (x && x.hp > 0 ? i : -1)).filter(i => i >= 0);
+  p.field.forEach((c, ci) => {
+    if (!c || c.acted || c.hp <= 0) return;
+    for (const n of skillIndices(c.id)) {
+      const k = skFor(c, n);
+      if (!k || c.light < k.c || (c.id === 'ch' && c.form === 'Monster Point' && n !== 1)) continue;
+      const aimsAtAlly = ['ch', 'pw', 'pwg', 'tdo'].includes(c.id) && k.t === 'sup';
+      const single = ['melee', 'bullet', 'ranged', 'ult'].includes(k.t) || c.id === 'lh' ||
+        (c.id === 'st' && n === 0) || (c.id === 'diavolo' && n === 2 && (c.fx.timeerase || 0) > 0);
+      if (aimsAtAlly) {
+        out.push({ t: 'skill', c: ci, s: n, tg: 0 });
+        p.field.forEach((ally, j) => {
+          if (j !== ci && ally && ally.hp > 0) out.push({ t: 'skill', c: ci, s: n, tg: j, ally: j });
+        });
+      } else if (single && foes.length) {
+        foes.forEach(tg => out.push({ t: 'skill', c: ci, s: n, tg }));
+      } else {
+        out.push({ t: 'skill', c: ci, s: n, tg: foes.length ? foes[0] : 0 });
+      }
+    }
+  });
+  return out;
+}
+function botReply(S, s, a) {         // hard-mode lookahead: estimate the foe's best public Skill reply
   try {
     const sim = JSON.parse(JSON.stringify(S));
     if (!A(sim, s, a, [])) return null;
     if (a.t !== 'end' && !sim.over && sim.cur === s) A(sim, s, { t: 'end' }, []);
     let worst = botEval(sim, s);
     if (sim.over || sim.cur === s) return worst;
-    for (const x of botCandidates(sim, 1 - s)) {
-      if (x.t !== 'skill') continue;
+    // Never speculate about Charge or Defense choices. Only already-committed
+    // state and publicly available Skills may influence this reply estimate.
+    for (const x of botPublicSkillReplies(sim, 1 - s)) {
       const s2 = JSON.parse(JSON.stringify(sim));
       if (!A(s2, 1 - s, x, [])) continue;
       const v = botEval(s2, s); if (v < worst) worst = v;
@@ -1487,6 +1520,10 @@ function botReply(S, s, a) {         // value for seat s after action a, assumin
 
 let botRunning = false, botProgress = Date.now();
 async function bot() {
+  // The bot is invoked by commit() only after the confirmed action has been
+  // applied and the turn has passed to seat 1. Never inspect a staged human
+  // choice or start a response while the human still owns the turn.
+  if (!BOT || !S || S.over || S.cur !== 1) return;
   if (botRunning) return;                 // never run two bot loops at once
   botRunning = true; botProgress = Date.now();
   let again = false;
