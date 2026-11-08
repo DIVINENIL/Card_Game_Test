@@ -831,7 +831,7 @@ function customSkill(S,s,a,ev){
  triggerAbject(S,s,a.c,ev);
  const targetIndex=Number.isInteger(a.tg)?a.tg:(Number.isInteger(a.ti)?a.ti:-1),enemy=(op.field[targetIndex]&&op.field[targetIndex].hp>0?op.field[targetIndex]:op.field.find(x=>x&&x.hp>0)),allyCandidate=(Number.isInteger(a.ally)?me.field[a.ally]:null)||me.field[a.tg]||me.field.find(x=>x.hp>0),ally=(allyCandidate&&allyCandidate!==c?allyCandidate:null), heal=(x,pct)=>{if(!x||x.hp<=0)return 0;if(x.fx.healblock>0){ev.push({k:'txt',t:`🚫 ${C[x.id].n} cannot be healed because Heal Block is active.`});return 0;}const before=x.hp;x.hp=Math.min(x.mhp,x.hp+Math.ceil(x.mhp*pct));const restored=x.hp-before;if(restored>0)ev.push({k:'txt',t:`💚 ${C[x.id].n} restores ${restored} HP (${x.hp}/${x.mhp}).`});else ev.push({k:'txt',t:`💚 ${C[x.id].n} is already at full HP.`});return restored;};
  const attack=(target,base,bleed=0,dur=0,chance=1)=>{if(target&&target.hp>0&&(c.fx?.blind||0)>0&&Math.random()<(0.5+Math.random()*0.5)){ev.push({k:'atk',s,i:a.c,ts:1-s,ti:op.field.indexOf(target),t:sk(c.id,n).t==='ult'?'ult':(sk(c.id,n).t==='bullet'||sk(c.id,n).t==='ranged')?'bullet':'melee',nm:skillDisplayName(c,n),dmg:0,miss:1,g:0});ev.push({k:'txt',t:`🌑 Blind: ${C[c.id].n} misses the attack.`});return;}const kiraPanic=c.id==='kira'?Math.floor(Math.max(0,c.mhp-c.hp)/(c.mhp*.1))*.10:0;const bambooSwordplay=c.id==='bhk'?Math.min(.35,Math.max(0,(c.mhp-c.hp)/Math.max(1,c.mhp))/2):0;const blackFlashBonus=(c.fx?.blackflash||0)>0?5:0;const d=Math.max(1,Math.round((base+blackFlashBonus)*(1+kiraPanic)*(1+bambooSwordplay)*(c.fx.up>0?1.5:1)*(c.fx.down>0?.5:1)*(c.id==='nr'?1+0.03*Math.max(0,c.light||0):1)));const skillType=skFor(c,n).t;const typ=skillType==='ult'?'ult':(skillType==='ranged'||skillType==='bullet')?'bullet':'melee';if(!target||target.hp<=0){if(!op.field.some(x=>x&&x.hp>0)){ev.push({k:'atk',s,i:a.c,ts:1-s,ti:-1,t:typ,nm:skillDisplayName(c,n),dmg:d,miss:0,g:0});hitPlayerDirect(S,1-s,d,ev);lifestealHeal(S,s,a.c,d,ev,true);if(blackFlashBonus){delete c.fx.blackflash;ev.push({k:'txt',t:'⚫ Black Flash consumed: +5 damage.'})}}return;}const ti=op.field.indexOf(target);boogieRedirect(S,1-s,ti,1,ev,c.id);onTargeted(S,1-s,ti,ev);ev.push({k:'atk',s,i:a.c,ts:1-s,ti,t:typ,nm:skillDisplayName(c,n),dmg:d,miss:0,g:0});hit(S,1-s,ti,d,ev,c.id);triggerCardCounter(S,1-s,ti,s,a.c,d,ev,skillDisplayName(c,n));lifestealHeal(S,s,a.c,d,ev,false);if(blackFlashBonus){delete c.fx.blackflash;ev.push({k:'txt',t:'⚫ Black Flash consumed: +5 damage.'})}const actual=op.field[ti]&&op.field[ti].hp>0?op.field[ti]:target;if(c.id==='gj'&&skillType!=='ult'&&actual&&actual.hp>0)triggerGojoBlackFlashPassive(S,s,a.c,[op.field.indexOf(actual)],skillType,ev);if(bleed&&actual&&actual.hp>0&&!uiDodge(actual)&&Math.random()<chance){actual.bleed=(actual.bleed||0)+bleed;actual.fx.bleed=Math.max(actual.fx.bleed||0,dur);ev.push({k:'sts',L:[{s:1-s,i:op.field.indexOf(actual),k:'bleed'}]})}};
- c.light-=k.c;c.acted=1;me.did=1;onSkillUsed(S,s,c,ev);
+ c.light-=k.c;c.acted=1;me.did=1;onSkillUsed(S,s,c,ev);tickBleed(c,S,s,a.c,ev);
  if(c.id==='bhk'){
    if(n===0){attack(enemy,5,2,1,.50);}
    if(n===1){attack(enemy,11,2,2,.75);if(Math.random()<.65){c.fx.up=Math.max(c.fx.up||0,2);ev.push({k:'sts',L:[{s,i:a.c,k:'up'}]});ev.push({k:'txt',t:'⚔️ Acupuncture: Bamboo-hatted Kim gains ATK Up for 2 turns (65% chance).'});}}
@@ -891,7 +891,7 @@ function customSkill(S,s,a,ev){
      else{c.fx.timeerase=3;c.st='evade';ev.push({k:'sts',L:[{s,i:a.c,k:'timeerase'}]});ev.push({k:'txt',t:'⏳ Time Erase: Diavolo becomes untargetable for up to 3 turns. Attacking ends the effect; Guard and Charge remain available.'});}}
    if(n===3){attack(enemy,20,5,1);if(enemy&&enemy.hp>0&&(enemy.fx.blind||0)>0){enemy.fx.bleed=Math.max(enemy.fx.bleed||0,1);enemy.bleed=(enemy.bleed||0)+2;ev.push({k:'sts',L:[{s:1-s,i:op.field.indexOf(enemy),k:'bleed'}]});ev.push({k:'txt',t:'🩸 You will not get in my way...: target was Blinded, so it receives 2 additional Bleed stacks for 1 turn.'});}}
  }
- tickBleed(c,S,s,a.c,ev);return fin(S,ev);
+ return fin(S,ev);
 }
 
 function draw(S,s,ev){const p=S.p[s];if(p.hand.length<7){let card;if(Array.isArray(p.deckPool)&&p.deckPool.length){if(isLastStand(S,s)){const chars=p.deckPool.filter(x=>x.k==='c'),effects=p.deckPool.filter(x=>x.k==='e');card=Math.random()<.75&&chars.length?randomPoolCard(chars):effects.length?randomPoolCard(effects):randomPoolCard(p.deckPool);}else card=randomPoolCard(p.deckPool);}else card=isLastStand(S,s)?(Math.random()<.75?{k:'c',id:CK[rnd(CK.length)]}:{k:'e',id:Object.keys(E)[rnd(Object.keys(E).length)]}):rc();p.hand.push(card);p.drawn++;if(ev)ev.push({k:'draw'})}}
@@ -1337,10 +1337,8 @@ function botEval(S, s) {
   const myAtk = atkSum(me), foeAtk = atkSum(op);
   let v = (me.hp - op.hp) * BOT_W.playerHp;
   v += (me.light - op.light) * BOT_W.playerLight;
-  // The Bot may evaluate its own hand, but must not inspect the human's
-  // concealed hand (including card identities or card types).
-  const ownHandValue = me.hand.reduce((n, cd) => n + (cd.k === 'c' ? BOT_W.charCard : BOT_W.effCard), 0);
-  v += ownHandValue;
+  const handValue = p => p.hand.reduce((n, cd) => n + (cd.k === 'c' ? BOT_W.charCard : BOT_W.effCard), 0);
+  v += handValue(me) - handValue(op);
   for (const c of me.field) {
     if (c.hp <= 0) continue;
     const cv = botCharValue(c, foeAtk);
@@ -1470,46 +1468,15 @@ function botDecide(S, s, opts = {}) {
   if (scored.length > 1 && scored[1].gain > scored[0].gain * .7 && Math.random() < .15) return scored[1].a;   // normal
   return scored[0].a;
 }
-/* Public-information-only reply candidates for hard-mode lookahead.
-   Deliberately does not inspect the opponent's hand, pending UI selection,
-   Charge flag (pc), or Defense stance (st). Charge/Defense are considered by
-   the AI only on its own turn, and are observed on the human side only after
-   A() has committed them to the game state. */
-function botPublicSkillReplies(S, s) {
-  const p = S.p[s], o = S.p[1 - s], out = [];
-  const foes = o.field.map((x, i) => (x && x.hp > 0 ? i : -1)).filter(i => i >= 0);
-  p.field.forEach((c, ci) => {
-    if (!c || c.acted || c.hp <= 0) return;
-    for (const n of skillIndices(c.id)) {
-      const k = skFor(c, n);
-      if (!k || c.light < k.c || (c.id === 'ch' && c.form === 'Monster Point' && n !== 1)) continue;
-      const aimsAtAlly = ['ch', 'pw', 'pwg', 'tdo'].includes(c.id) && k.t === 'sup';
-      const single = ['melee', 'bullet', 'ranged', 'ult'].includes(k.t) || c.id === 'lh' ||
-        (c.id === 'st' && n === 0) || (c.id === 'diavolo' && n === 2 && (c.fx.timeerase || 0) > 0);
-      if (aimsAtAlly) {
-        out.push({ t: 'skill', c: ci, s: n, tg: 0 });
-        p.field.forEach((ally, j) => {
-          if (j !== ci && ally && ally.hp > 0) out.push({ t: 'skill', c: ci, s: n, tg: j, ally: j });
-        });
-      } else if (single && foes.length) {
-        foes.forEach(tg => out.push({ t: 'skill', c: ci, s: n, tg }));
-      } else {
-        out.push({ t: 'skill', c: ci, s: n, tg: foes.length ? foes[0] : 0 });
-      }
-    }
-  });
-  return out;
-}
-function botReply(S, s, a) {         // hard-mode lookahead: estimate the foe's best public Skill reply
+function botReply(S, s, a) {         // value for seat s after action a, assuming the foe then plays its best single skill
   try {
     const sim = JSON.parse(JSON.stringify(S));
     if (!A(sim, s, a, [])) return null;
     if (a.t !== 'end' && !sim.over && sim.cur === s) A(sim, s, { t: 'end' }, []);
     let worst = botEval(sim, s);
     if (sim.over || sim.cur === s) return worst;
-    // Never speculate about Charge or Defense choices. Only already-committed
-    // state and publicly available Skills may influence this reply estimate.
-    for (const x of botPublicSkillReplies(sim, 1 - s)) {
+    for (const x of botCandidates(sim, 1 - s)) {
+      if (x.t !== 'skill') continue;
       const s2 = JSON.parse(JSON.stringify(sim));
       if (!A(s2, 1 - s, x, [])) continue;
       const v = botEval(s2, s); if (v < worst) worst = v;
@@ -1520,10 +1487,6 @@ function botReply(S, s, a) {         // hard-mode lookahead: estimate the foe's 
 
 let botRunning = false, botProgress = Date.now();
 async function bot() {
-  // The bot is invoked by commit() only after the confirmed action has been
-  // applied and the turn has passed to seat 1. Never inspect a staged human
-  // choice or start a response while the human still owns the turn.
-  if (!BOT || !S || S.over || S.cur !== 1) return;
   if (botRunning) return;                 // never run two bot loops at once
   botRunning = true; botProgress = Date.now();
   let again = false;
