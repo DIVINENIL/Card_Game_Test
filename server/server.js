@@ -2,6 +2,7 @@ import http from "node:http";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { WebSocketServer, WebSocket } from "ws";
 import { createGame, applyAction, snapshotForSeat } from "./game-engine.js";
+import { filterEventsForSeat } from "./protocol.js";
 
 const PORT = Number(process.env.PORT || 10000);
 const ORIGINS = new Set((process.env.ALLOWED_ORIGINS || "http://localhost:3000,http://127.0.0.1:5500").split(",").map(x => x.trim()).filter(Boolean));
@@ -23,7 +24,8 @@ function sendSeat(room, seat, type, extra = {}) {
   send(player.ws, { type, room: publicRoom(room), seat, state: view, ...extra });
 }
 function broadcastViews(room, events = []) {
-  for (let seat = 0; seat < 2; seat++) sendSeat(room, seat, "state", { events });
+  // Events can contain private choices. Never broadcast the host copy verbatim.
+  for (let seat = 0; seat < 2; seat++) sendSeat(room, seat, "state", { events: filterEventsForSeat(events, seat) });
 }
 function detach(ws) {
   const link = sockets.get(ws);
@@ -44,7 +46,7 @@ const server = http.createServer((req, res) => {
 const wss = new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 });
 server.on("upgrade", (req, socket, head) => {
   const origin = req.headers.origin;
-  if (origin && ORIGINS.size && !ORIGINS.has(origin)) { socket.write("HTTP/1.1 403 Forbidden\r\n\r\n"); return socket.destroy(); }
+  if ((process.env.NODE_ENV === "production" && !origin) || (origin && ORIGINS.size && !ORIGINS.has(origin))) { socket.write("HTTP/1.1 403 Forbidden\r\n\r\n"); return socket.destroy(); }
   wss.handleUpgrade(req, socket, head, ws => wss.emit("connection", ws, req));
 });
 wss.on("connection", ws => {
@@ -53,7 +55,9 @@ wss.on("connection", ws => {
     try { msg = JSON.parse(raw.toString()); } catch { return send(ws, { type: "error", code: "BAD_JSON" }); }
     if (!msg || typeof msg.type !== "string") return send(ws, { type: "error", code: "BAD_MESSAGE" });
     if (msg.type === "create-room") {
-      const id = randomBytes(3).toString("hex").toUpperCase();
+      if (sockets.has(ws)) return send(ws, { type: "error", code: "ALREADY_IN_ROOM" });
+      let id;
+      do { id = randomBytes(4).toString("hex").toUpperCase(); } while (rooms.has(id));
       const seatToken = token();
       const room = { id, createdAt: now(), lastActivity: now(), seats: [{ token: seatToken, ws, disconnectedAt: null }, null], state: null, status: "waiting" };
       rooms.set(id, room); sockets.set(ws, { roomId: id, seat: 0 });
@@ -61,6 +65,7 @@ wss.on("connection", ws => {
       return;
     }
     if (msg.type === "join-room") {
+      if (sockets.has(ws)) return send(ws, { type: "error", code: "ALREADY_IN_ROOM" });
       const id = String(msg.roomId || "").toUpperCase();
       const room = rooms.get(id);
       if (!room) return send(ws, { type: "error", code: "ROOM_NOT_FOUND" });
@@ -73,8 +78,10 @@ wss.on("connection", ws => {
       return;
     }
     if (msg.type === "reconnect") {
+      if (sockets.has(ws)) return send(ws, { type: "error", code: "ALREADY_IN_ROOM" });
       const room = rooms.get(String(msg.roomId || "").toUpperCase());
       const seat = Number(msg.seat);
+      if (seat !== 0 && seat !== 1) return send(ws, { type: "error", code: "RECONNECT_DENIED" });
       const player = room?.seats?.[seat];
       if (!player || !safeEqual(player.token, msg.seatToken) || (player.disconnectedAt && now() - player.disconnectedAt > 120000)) return send(ws, { type: "error", code: "RECONNECT_DENIED" });
       if (player.ws && player.ws !== ws) player.ws.close(4001, "Session replaced");
