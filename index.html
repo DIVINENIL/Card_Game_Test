@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Anime Card Fight</title>
 <!-- PeerJS for Multiplayer (P2P) -->
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js'"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <style>
 :root{--bg:#0c0a1a;--p:#171335;--t:#f2efff;--m:#9a93c9;--a:#ff3d81;--b:#35e0ff;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--t);font:14px system-ui,sans-serif;overflow:hidden}
@@ -912,7 +912,7 @@ function syncLastStand(S,s,ev){const p=S.p[s];if(S.mode==='ultlight'){p.lastStan
 function lifestealHeal(S,s,ci,d,ev,direct){const c=S.p[s].field[ci];if(!c||c.hp<=0||!(d>0))return;let h=0;if(direct&&c.id==='pwg'&&(c.fx.crimsonaura||0)>0)h+=Math.ceil(d*.15);if((c.fx.lifesteal||0)>0&&!(c.fx.healblock>0))h+=Math.floor(d*.25);h=Math.min(h,Math.max(0,c.mhp-c.hp));if(h>0){c.hp+=h;ev.push({k:'healnum',s,i:ci,v:h});ev.push({k:'txt',t:`💚 Lifesteal: ${C[c.id].n} restores ${h} HP.`})}}
 function hitPlayerDirect(S,s,d,ev){const p=S.p[s];if(d<=0)return;p.hp-=d;p.dmg+=d;syncLastStand(S,s,ev);if(p.revengeTurn!==S.tc){p.revengeTurn=S.tc;p.revengeGained=0;}let gained=0;if(p.revengeGained<2){const before=p.light;p.light=Math.min(p.maxL,p.light+1);gained=p.light-before;if(gained>0)p.revengeGained++;}if(gained>0)ev.push({k:'txt',t:`🔥 Revenge Light: Player HP took damage, +${gained} Light (${p.light}/${p.maxL}); limit +2 per enemy turn.`});}
 function canBoogie(x){return !!x&&x.hp>0&&!['stun','freeze','sleep'].some(k=>(x.fx?.[k]||0)>0)}
-function boogieRedirect(S,s,i,d,ev,sourceId){let c=S.p[s].field[i];if(AOE.hit){if(AOE.used||!c)return c;const _tg=AOE.tg||[],_todo=S.p[s].field.find(x=>x&&x.id==='tdo'&&x.hp>0);if(!_todo||_tg.includes(_todo))return c;const _cand=_tg.filter(x=>x&&x.hp>0&&x.id!=='tdo'&&S.p[s].field.includes(x));if(!_cand.length)return c;const _low=_cand.reduce((m,x)=>x.hp<m.hp?x:m,_cand[0]);if(c!==_low)return c;}if(d>0&&c.id!=='tdo'&&sourceId!=='status'&&sourceId!=='burn'&&S.p[s].field[i]===c){const field=S.p[s].field,allyIndex=i,ally=field[allyIndex],ti=field.findIndex((x,idx)=>idx!==allyIndex&&x!==ally&&x.id==='tdo'&&x.hp>0&&canBoogie(x)&&(x.boogiePassiveUses||0)<(x.boogieSkillUsed?2:1));if(ally&&ally.hp>0&&ally.id!=='tdo'&&ti>=0){const todo=field[ti];if(todo&&todo!==ally&&todo.id==='tdo'&&ti!==allyIndex){field[allyIndex]=todo;field[ti]=ally;i=allyIndex;c=todo;todo.boogiePassiveUses=(todo.boogiePassiveUses||0)+1;if(AOE.hit)AOE.used=1;todo.fx.prot=Math.max(todo.fx.prot||0,1);/* Existing effects belong to the ally and stay there after the swap. The incoming hit is redirected to Todo; only that attack's own on-hit effects may affect him. */ev.push({k:'boogieswap',s,allyIndex, todoIndex:ti, attackerSide:1-s, attackerIndex:sourceId||null});ev.push({k:'txt',t:`👏 Passive Boogie Woogie: Todo swaps places with his ally before the hit animation and takes the incoming attack (${todo.boogiePassiveUses}/${todo.boogieSkillUsed?2:1} triggers this turn).`});}}}return S.p[s].field[i]}
+function boogieRedirect(S,s,i,d,ev,sourceId){let c=S.p[s].field[i];/* Counter stance must resolve against the originally targeted character; Boogie Woogie cannot redirect or swap a Counter interaction. Ordinary attacks remain eligible. */if(c&&(c.st==='counter'||(c.fx&&c.fx.counter>0)))return c;if(AOE.hit){if(AOE.used||!c)return c;const _tg=AOE.tg||[],_todo=S.p[s].field.find(x=>x&&x.id==='tdo'&&x.hp>0);if(!_todo||_tg.includes(_todo))return c;const _cand=_tg.filter(x=>x&&x.hp>0&&x.id!=='tdo'&&S.p[s].field.includes(x));if(!_cand.length)return c;const _low=_cand.reduce((m,x)=>x.hp<m.hp?x:m,_cand[0]);if(c!==_low)return c;}if(d>0&&c.id!=='tdo'&&sourceId!=='status'&&sourceId!=='burn'&&S.p[s].field[i]===c){const field=S.p[s].field,allyIndex=i,ally=field[allyIndex],ti=field.findIndex((x,idx)=>idx!==allyIndex&&x!==ally&&x.id==='tdo'&&x.hp>0&&canBoogie(x)&&(x.boogiePassiveUses||0)<(x.boogieSkillUsed?2:1));if(ally&&ally.hp>0&&ally.id!=='tdo'&&ti>=0){const todo=field[ti];if(todo&&todo!==ally&&todo.id==='tdo'&&ti!==allyIndex){field[allyIndex]=todo;field[ti]=ally;i=allyIndex;c=todo;todo.boogiePassiveUses=(todo.boogiePassiveUses||0)+1;if(AOE.hit)AOE.used=1;todo.fx.prot=Math.max(todo.fx.prot||0,1);/* Existing effects belong to the ally and stay there after the swap. The incoming hit is redirected to Todo; only that attack's own on-hit effects may affect him. */ev.push({k:'boogieswap',s,allyIndex, todoIndex:ti, attackerSide:1-s, attackerIndex:sourceId||null});ev.push({k:'txt',t:`👏 Passive Boogie Woogie: Todo swaps places with his ally before the hit animation and takes the incoming attack (${todo.boogiePassiveUses}/${todo.boogieSkillUsed?2:1} triggers this turn).`});}}}return S.p[s].field[i]}
 /* ---- Passive helpers (Copy Ninja, Water Breathing, Cursed Adrenaline, Saiyan Instinct, Soul Reaper) ---- */
 function onTargeted(S,s,i,ev){const c=S.p[s]&&S.p[s].field[i];if(!c||c.hp<=0)return;
  if(c.id==='kk'){const rd=Math.ceil(Math.max(1,S.tc)/2);if(c.copyRound!==rd){c.copyRound=rd;if((c.light||0)<5){c.light=Math.min(5,(c.light||0)+1);ev.push({k:'txt',t:'🥷 Copy Ninja: Kakashi was targeted by an enemy Skill and gains 1 Light.'})}else ev.push({k:'txt',t:'🥷 Copy Ninja: Kakashi was targeted, but his Light is already full.'})}}
@@ -925,19 +925,24 @@ function defenseActionLocked(c){return !!(c&&['stun','freeze','sleep'].some(k=>(
 // from the opponent until it triggers; this message is the public notification.
 function triggerCardCounter(S,defenderSide,defenderIndex,attackerSide,attackerIndex,incomingDamage,ev,attackName='Attack'){
  const defender=S.p[defenderSide]?.field[defenderIndex];
- const attacker=S.p[attackerSide]?.field[attackerIndex];
+ let attacker=S.p[attackerSide]?.field[attackerIndex];
  // Kim's normal Defense: Counter is stored in defender.st, while the Counter card
  // stores its state in defender.fx.counter. Both must use the same resolution path.
  const hasPreparedCounter=!!(defender&&(defender.st==='counter'||(defender.fx&&defender.fx.counter>0)));
  if(!defender||defender.hp<=0||!hasPreparedCounter||defenseActionLocked(defender)||incomingDamage<=0)return false;
  defender.st=null;
  if(defender.fx){delete defender.fx.counter;delete defender.fx.counterOwner;delete defender.fx.counterCard;}
+ const retaliation=Math.max(1,Math.round(incomingDamage*.5));
+ // Resolve Boogie Woogie on the COUNTER retaliation, not on the attack that
+ // triggered it. The original attacker completes their hit; Todo swaps in just
+ // before the counter animation/damage and becomes the actual counter target.
+ boogieRedirect(S,attackerSide,attackerIndex,retaliation,ev,defender.id);
+ attacker=S.p[attackerSide]?.field[attackerIndex];
  if(defender.id==='bhk'){
    defender.pend=defender.pend||{};defender.pend.up={n:1,dur:2};
    ev.push({k:'txt',t:'⚔️ Overthrow: Bamboo-hatted Kim will gain ATK Up for 2 turns at the start of his next turn.'});
-   if(attacker&&attacker.hp>0&&Math.random()<.50){attacker.bleed=(attacker.bleed||0)+3;attacker.fx.bleed=Math.max(attacker.fx.bleed||0,1);ev.push({k:'sts',L:[{s:attackerSide,i:attackerIndex,k:'bleed'}]});ev.push({k:'txt',t:'🩸 Overthrow: 50% chance succeeded — the attacker receives Bleed 3 for 1 round.'});}
+   if(attacker&&attacker.hp>0&&Math.random()<.50){attacker.bleed=(attacker.bleed||0)+3;attacker.fx.bleed=Math.max(attacker.fx.bleed||0,1);ev.push({k:'sts',L:[{s:attackerSide,i:attackerIndex,k:'bleed'}]});ev.push({k:'txt',t:'🩸 Overthrow: 50% chance succeeded — the counter target receives Bleed 3 for 1 round.'});}
  }
- const retaliation=Math.max(1,Math.round(incomingDamage*.5));
  ev.push({k:'ctr',s:defenderSide,i:defenderIndex,ts:attackerSide,ti:attackerIndex,dmg:retaliation});
  ev.push({k:'txt',t:`↩️ Counter activated! ${C[defender.id]?.n||'Defender'} counters ${attacker&&C[attacker.id]?C[attacker.id].n:'the attacker'} for ${retaliation} damage after ${attackName}.`});
  if(attacker&&attacker.hp>0)hit(S,attackerSide,attackerIndex,retaliation,ev);
@@ -1555,69 +1560,26 @@ setInterval(() => {
 async function commit0(ev){orderAttackCutscenes(ev);const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();await recv(snap,ev)}
 
 function online(code,isHost){
- BOT=false;HOST=!!isHost;SEAT=isHost?0:1;
- const status=$('#st');
- const cleanCode=String(code||'').trim().toUpperCase();
- if(!/^\d{4,6}$/.test(cleanCode)){status.textContent='Enter a valid 4–6 digit room code.';return}
- if(typeof Peer==='undefined'){status.textContent='PeerJS failed to load. Refresh the page or try Vs Bot.';return}
- status.textContent='Connecting to the room server...';
- if(conn){try{conn.close()}catch(e){} conn=null}
- if(peer){try{peer.destroy()}catch(e){} peer=null}
- REMOTE_DECK=null;REMOTE_DECK_RECEIVED=false;
- const roomCode='acf-'+cleanCode;
- let gameStarted=false, connectTimer=null;
- const clearConnectTimer=()=>{if(connectTimer){clearTimeout(connectTimer);connectTimer=null}};
- const startHostGame=()=>{
-  if(gameStarted||!conn||!conn.open||!REMOTE_DECK_RECEIVED)return;
-  gameStarted=true;clearConnectTimer();
-  status.textContent='Opponent connected! Starting game...';
-  startGame();
- };
+ BOT=false;HOST=isHost;SEAT=isHost?0:1;
+ if(typeof Peer=='undefined'){$('#st').textContent='PeerJS failed to load. Try playing vs Bot.';return}
+ $('#st').textContent='Connecting to network...';
+ if(peer)peer.destroy();
+ const roomCode='acf-'+code;
  if(isHost){
-  status.textContent='Creating room '+cleanCode+'...';
-  peer=new Peer(roomCode);
-  peer.on('open',id=>{status.textContent='Room created! Code: '+cleanCode+' (Waiting for opponent...)'});
-  peer.on('connection',c=>{
-   if(conn&&conn.open){try{c.close()}catch(e){}return}
-   conn=c;REMOTE_DECK=null;REMOTE_DECK_RECEIVED=false;
-   status.textContent='Opponent found. Establishing game connection...';
-   c.on('open',()=>{status.textContent='Connected. Waiting for opponent deck...';startHostGame()});
-   c.on('data',msg=>{
-    if(!msg||typeof msg!=='object')return;
-    if(msg.t==='deck'){
-     REMOTE_DECK=validDeckPool(msg.d)?msg.d.map(x=>({...x})):null;
-     REMOTE_DECK_RECEIVED=true;
-     startHostGame();
-    }else if(msg.t==='do'&&S){hostApply(1,msg.d)}
-   });
-   c.on('close',()=>{clearConnectTimer();if(!gameStarted)status.textContent='Opponent disconnected before the game started. Create a new room.';else status.textContent='Opponent disconnected.'});
-   c.on('error',err=>{status.textContent='Connection error: '+(err&&err.type?err.type:'data channel failed')});
-   // Do not start before the channel is open; allow a slow deck transfer to finish.
-   connectTimer=setTimeout(()=>{
-    if(!gameStarted&&conn===c&&c.open){REMOTE_DECK=null;REMOTE_DECK_RECEIVED=true;startHostGame()}
-    else if(!gameStarted)status.textContent='Connection timed out. Ask your friend to rejoin the room.';
-   },15000);
-  });
-  peer.on('error',err=>{
-   const type=err&&err.type?err.type:'unknown';
-   status.textContent=type==='unavailable-id'?'This room code is already in use. Create another room.':'Room server error: '+type+'. Try creating the room again.';
-  });
-  peer.on('disconnected',()=>{status.textContent='Disconnected from the room server. Reconnecting...';if(peer&&!peer.destroyed)peer.reconnect()});
+  REMOTE_DECK=null;REMOTE_DECK_RECEIVED=false;peer=new Peer(roomCode);
+  peer.on('open',()=>{$('#st').textContent='Room Created! Code: '+code+' (Waiting for opponent...)'});
+  peer.on('connection',c=>{conn=c;REMOTE_DECK=null;REMOTE_DECK_RECEIVED=false;$('#st').textContent='Opponent connected! Starting game...';
+   conn.on('data',msg=>{if(msg.t==='deck'){REMOTE_DECK=validDeckPool(msg.d)?msg.d.map(x=>({...x})):null;REMOTE_DECK_RECEIVED=true;}else if(msg.t==='do'&&S)hostApply(1,msg.d)});
+   setTimeout(()=>startGame(),1200)});
+  peer.on('error',err=>{$('#st').textContent=err.type==='unavailable-id'?'Room code in use. Try again':'Error: '+err.type});
  }else{
   peer=new Peer();
-  peer.on('open',()=>{
-   status.textContent='Room server connected. Joining '+cleanCode+'...';
+  peer.on('open',()=>{$('#st').textContent='Joining Room '+code+'...';
    conn=peer.connect(roomCode);
-   connectTimer=setTimeout(()=>{if(!conn||!conn.open)status.textContent='Could not connect to that room. Check the code and make sure the host is still waiting.'},20000);
-   conn.on('open',()=>{clearConnectTimer();status.textContent='Joined room! Waiting for host to start...';conn.send({t:'deck',d:getActiveDeckPool()})});
-   conn.on('data',msg=>{if(msg&&msg.t==='st'&&msg.d&&msg.d.S){status.textContent='Connected!';recv(msg.d.S,msg.d.ev||[])}});
-   conn.on('close',()=>{clearConnectTimer();status.textContent='Connection to host was closed. Ask the host to create a new room.'});
-   conn.on('error',err=>{clearConnectTimer();status.textContent='Could not establish peer connection: '+(err&&err.type?err.type:'network error')});
-  });
-  peer.on('error',err=>{clearConnectTimer();const type=err&&err.type?err.type:'unknown';status.textContent=type==='peer-unavailable'?'Room not found. Check the code and make sure the host has created the room.':'Join failed: '+type+'. Check your connection and try again.'});
-  peer.on('disconnected',()=>{status.textContent='Disconnected from the room server. Reconnecting...';if(peer&&!peer.destroyed)peer.reconnect()});
- }
-}
+   conn.on('open',()=>{$('#st').textContent='Joined Room! Waiting for host...';conn.send({t:'deck',d:getActiveDeckPool()})});
+   conn.on('data',msg=>{if(msg.t==='st')recv(msg.d.S,msg.d.ev)})});
+  peer.on('error',()=>{$('#st').textContent='Room not found or connection failed'});
+ }}
 
 /* ============================================================================
    ANIMATION & BATTLE EVENTS
@@ -2621,8 +2583,8 @@ function pickMode(m){MODE=m;document.querySelectorAll('#modeBox button').forEach
 document.querySelectorAll('#modeBox button').forEach(b=>b.onclick=()=>pickMode(b.dataset.mode));pickMode(MODE);
 $('#bot').onclick=()=>{BOT=true;HOST=true;SEAT=0;startGame()};
 document.querySelectorAll('#botLevel button').forEach(b=>b.onclick=()=>{BOT_LEVEL=b.dataset.lv;document.querySelectorAll('#botLevel button').forEach(x=>x.classList.toggle('pri',x===b));toast('🤖 Bot: '+({easy:'Easy',normal:'Normal',hard:'Hard'})[BOT_LEVEL],1200)});
-$('#mk').onclick=()=>online(String(100000+rnd(900000)),true);
-$('#jn').onclick=()=>{const c=$('#code').value.trim();if(c)online(c,false);else $('#st').textContent='Enter the room code first.'};
+$('#mk').onclick=()=>online(String(1000+rnd(9000)),true);
+$('#jn').onclick=()=>{const c=$('#code').value.trim();if(c)online(c,false)};
 // --------------------------- Deck Builder ---------------------------
 const DECK_STORE_KEY='animeCardFight.deckBuilder.v1';
 let DECK_DATA=Array.from({length:10},(_,i)=>({name:'Deck '+(i+1),cards:[]}));
