@@ -382,7 +382,7 @@ window.EffectRegistry = new (class EffectRegistry {
 <button id="decksBtn">🃏 Decks</button><div id="activeDeckLabel" style="font-size:12px;color:#c9c4f0;margin:2px 0 6px">Active Deck: Random (original rules)</div>
 <button id="tutorialBtn">📘 Tutorial Mode</button>
 <button id="mk">🏠 Create Room</button>
-<div><input id="code" maxlength="6" placeholder="Room Code"> <button id="jn">Join Room</button></div>
+<div><input id="code" maxlength="6" inputmode="numeric" placeholder="6-digit Room Code"> <button id="jn">Join Room</button></div>
 <div id="st" style="color:var(--b)"></div></div>
 <div id="deckModal" style="display:none;position:fixed;inset:0;z-index:10000;background:#050411ed;overflow:auto;padding:14px;box-sizing:border-box;align-items:flex-start;justify-content:center">
  <div class="deck-shell" style="width:min(1480px,100%);background:#050d20;border:1px solid #2866b5;border-radius:16px;padding:16px;box-sizing:border-box;color:#f4f7ff;margin:auto;box-shadow:0 0 40px #1678ff25">
@@ -1291,17 +1291,17 @@ let G=null,S=null,SEAT=0,HOST=true,BOT=false,MODE='ko',busy=false,Q=[],U={},last
 let peer=null,conn=null,REMOTE_DECK=null,REMOTE_DECK_RECEIVED=false;
 function startGame(){const localPool=(typeof tutorialBattle!=='undefined'&&tutorialBattle)?null:getActiveDeckPool();const remotePool=BOT?null:(REMOTE_DECK_RECEIVED?REMOTE_DECK:null);S={mode:MODE,tc:0,cur:0,over:null,p:[mkp(localPool),mkp(remotePool)],dom:[null,null]};const ev=[];startTurn(S,rnd(2),ev);commit([]);$('#menu').style.display='none';$('#game').style.display='flex';toast(S.cur==SEAT?'🎲 You start first!':'🎲 Enemy starts first!',1500);}
 function orderAttackCutscenes(ev){if(!Array.isArray(ev))return ev;const swaps=ev.filter(e=>e&&e.k==='boogieswap');if(swaps.length){ev.splice(0,ev.length,...swaps,...ev.filter(e=>!swaps.includes(e)));}const idx=[];for(let i=0;i<ev.length;i++){const e=ev[i];if(e&&((e.k==='aoe'&&e.ultAoe)||(e.k==='atk'&&e.t==='ult')))idx.push(i)}if(!idx.length)return ev;const lead=idx.map(i=>ev[i]),rest=ev.filter((e,i)=>!idx.includes(i));ev.splice(0,ev.length,...lead,...rest);return ev}
-async function commit(ev){orderAttackCutscenes(ev);const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};if(conn&&conn.open)conn.send({t:'st',d:last});await Promise.race([recv(snap,ev),sleep(15000)]);tm();if(BOT&&S.cur==1&&!S.over)bot()}
+async function commit(ev){orderAttackCutscenes(ev);const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};netSend({t:'st',d:last});await Promise.race([recv(snap,ev),sleep(15000)]);tm();if(BOT&&S.cur==1&&!S.over)bot()}
 let DL=0,TT=0,TC=-1,TC2=-1,timerZeroSubmitted=false;
 setInterval(()=>{const t=$('#tm');if(!t||!G||G.over)return;if(tutorialBattle&&tutorialPause){t.textContent='⏸ PAUSED';t.style.color='#35e0ff';return}const s=Math.max(0,Math.ceil((DL-Date.now())/1000));t.textContent=s+'s';t.style.color=s<=15?'#ff5a5a':'';if(s<=15&&s>0&&s!==lastTimerSound){lastTimerSound=s;sfx('timer')}if(s>10)lastTimerSound=-1;if(s===0&&HOST&&G&&!G.over&&S&&S.tc===TC&&!timerZeroSubmitted){timerZeroSubmitted=true;hostApply(S.cur,{t:'end'});}},250);
 function tm(){if(!HOST)return;if(tutorialBattle&&tutorialPause){clearTimeout(TT);return}if(S.over){clearTimeout(TT);return}if(S.tc===TC)return;TC=S.tc;clearTimeout(TT);if(BOT&&S.cur==1)return;TT=setTimeout(()=>{if(S.tc===TC&&!S.over)hostApply(S.cur,{t:'end'})},91000)}
 function hostApply(s,a){const ev=[];if(A(S,s,a,ev))commit(ev)}
-function doAct(a){if(HOST)hostApply(SEAT,a);else if(conn&&conn.open)conn.send({t:'do',d:a})}
+function doAct(a){if(HOST)hostApply(SEAT,a);else netSendAction(a)}
 function recv(s2,ev){return new Promise(res=>{Q.push([s2,ev,res]);pump()})}
 async function pump(){if(busy)return;busy=true;while(Q.length){const[s2,ev,res]=Q.shift();
  if(G){for(const e of ev){try{await Promise.race([pe(e),sleep(12000)])}catch(err){console.error('animation error',err)}}}else{$('#menu').style.display='none';$('#game').style.display='flex'}
  try{G=s2;if(G.tc!==TC2){TC2=G.tc;DL=Date.now()+90000;timerZeroSubmitted=false}try{render()}catch(err){console.error('render error',err)}
- if(G.over){$('#ot').textContent=G.over.w==-1?'DRAW!':G.over.w==SEAT?'🏆 VICTORY!':'💀 DEFEAT...';$('#os').textContent=!G.over.d?'':G.over.why==='limit'?('⏱ Round limit reached — the player who took less total damage wins. Damage taken: You '+G.over.d[SEAT]+' · Opponent '+G.over.d[1-SEAT]+'.'):G.over.why==='elim'?('☠️ Elimination — characters lost: You '+G.over.d[SEAT]+' · Opponent '+G.over.d[1-SEAT]+'.'):G.over.why==='rush'?('🎯 Damage Rush — damage dealt: You '+G.over.d[1-SEAT]+' · Opponent '+G.over.d[SEAT]+'.'):'';$('#over').style.display='flex'}}catch(err){console.error('pump error',err)}res()}busy=false}
+ if(G.over){$('#ot').textContent=G.over.w==-1?'DRAW!':G.over.w==SEAT?'🏆 VICTORY!':'💀 DEFEAT...';$('#os').textContent=!G.over.d?'':G.over.why==='limit'?('⏱ Round limit reached — the player who took less total damage wins. Damage taken: You '+G.over.d[SEAT]+' · Opponent '+G.over.d[1-SEAT]+'.'):G.over.why==='elim'?('☠️ Elimination — characters lost: You '+G.over.d[SEAT]+' · Opponent '+G.over.d[1-SEAT]+'.'):G.over.why==='rush'?('🎯 Damage Rush — damage dealt: You '+G.over.d[1-SEAT]+' · Opponent '+G.over.d[SEAT]+'.'):G.over.why==='dc'?'🔌 Opponent disconnected — you win by forfeit.':'';$('#over').style.display='flex'}}catch(err){console.error('pump error',err)}res()}busy=false}
 
 /* ============================================================================
    BOT AI
@@ -1559,27 +1559,301 @@ setInterval(() => {
 
 async function commit0(ev){orderAttackCutscenes(ev);const snap=JSON.parse(JSON.stringify(S));last={S:snap,ev};tm();await recv(snap,ev)}
 
-function online(code,isHost){
- BOT=false;HOST=isHost;SEAT=isHost?0:1;
- if(typeof Peer=='undefined'){$('#st').textContent='PeerJS failed to load. Try playing vs Bot.';return}
- $('#st').textContent='Connecting to network...';
- if(peer)peer.destroy();
- const roomCode='acf-'+code;
- if(isHost){
-  REMOTE_DECK=null;REMOTE_DECK_RECEIVED=false;peer=new Peer(roomCode);
-  peer.on('open',()=>{$('#st').textContent='Room Created! Code: '+code+' (Waiting for opponent...)'});
-  peer.on('connection',c=>{conn=c;REMOTE_DECK=null;REMOTE_DECK_RECEIVED=false;$('#st').textContent='Opponent connected! Starting game...';
-   conn.on('data',msg=>{if(msg.t==='deck'){REMOTE_DECK=validDeckPool(msg.d)?msg.d.map(x=>({...x})):null;REMOTE_DECK_RECEIVED=true;}else if(msg.t==='do'&&S)hostApply(1,msg.d)});
-   setTimeout(()=>startGame(),1200)});
-  peer.on('error',err=>{$('#st').textContent=err.type==='unavailable-id'?'Room code in use. Try again':'Error: '+err.type});
+/* ============================================================================
+   MULTIPLAYER — rooms, heartbeat & automatic reconnect (PeerJS, peer-to-peer)
+   ----------------------------------------------------------------------------
+   HOST  = player 1 (runs the real game state S, applies both players' actions)
+   GUEST = player 2 (sends actions, renders the state the host sends back)
+
+   • Room code collisions  -> host automatically picks a new code.
+   • Heartbeat (ping/pong) -> silent connection drops are detected in ~14 s.
+   • Guest auto-reconnects -> new peer + same secret token, retried with back-off;
+                              the host re-sends the full game state ("sync").
+   • Host signalling loss  -> peer.reconnect() / peer re-created with the same id.
+   • Host waits 60 s for a dropped guest, then the guest forfeits.
+   ============================================================================ */
+const NET={role:null,code:null,roomId:null,token:null,guestToken:null,started:false,joined:false,fatal:false,closing:false,
+ hb:null,lastRx:0,lost:false,retry:0,retryTimer:null,sigTimer:null,sigTry:0,hostTries:0,graceTimer:null,graceTick:null,graceEnd:0,dialing:null};
+const NET_ICE=[
+ {urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},
+ {urls:'stun:global.stun.twilio.com:3478'},{urls:'stun:stun.cloudflare.com:3478'},
+ /* free public relay: lets players behind strict NAT / mobile networks connect (best-effort) */
+ {urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}
+];
+const NET_PEER_OPTS=()=>({debug:1,config:{iceServers:NET_ICE}});
+const NET_TIMEOUT=14000,NET_GRACE=60000,NET_GUEST_MAX=15,NET_JOIN_MAX=4,NET_DIAL_TIMEOUT=12000;
+const netOver=()=>!!((S&&S.over)||(G&&G.over));
+const netNewCode=()=>String(100000+Math.floor(Math.random()*900000));
+const netKill=o=>{if(!o)return;o._x=true;o._dead=true;try{o.destroy?o.destroy():o.close()}catch(e){}};
+
+/* ---------- small UI helpers ---------- */
+function netStatus(t,kind){const s=$('#st');if(!s)return;s.textContent=t;s.style.color=kind==='err'?'#ff6b6b':kind==='ok'?'#4ade80':kind==='warn'?'#ffd23d':'var(--b)'}
+function netTools(list){const t=$('#netTools');if(!t)return;t.textContent='';list.forEach(a=>{const x=document.createElement('button');x.textContent=a.label;x.style.cssText='font-size:13px;padding:6px 10px';x.onclick=a.fn;t.append(x)});t.style.display=list.length?'flex':'none'}
+function netBusy(b){['#mk','#jn','#code'].forEach(id=>{const e=$(id);if(e)e.disabled=b})}
+function netBanner(text,kind,actions){
+ let b=document.getElementById('netBanner');
+ if(!text){if(b)b.style.display='none';return}
+ if(!b){b=document.createElement('div');b.id='netBanner';b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:100000;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;max-width:92vw;padding:8px 12px;border-radius:10px;font:600 13px system-ui,sans-serif;color:#fff;box-shadow:0 4px 18px #0008;border:1px solid #fff3;text-align:center';document.body.append(b)}
+ b.style.display='flex';b.style.background=kind==='err'?'#7a1d2c':kind==='ok'?'#17653a':'#6b4a0a';b.textContent='';
+ const sp=document.createElement('span');sp.textContent=text;b.append(sp);
+ (actions||[]).forEach(a=>{const x=document.createElement('button');x.textContent=a.label;x.style.cssText='padding:4px 10px;font-size:12px';x.onclick=a.fn;b.append(x)});
+}
+function netCopy(text,msg){const done=()=>toast(msg||'📋 Copied',1200);if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,()=>prompt('Copy:',text));else prompt('Copy:',text)}
+function netFlash(text){netBanner(text,'ok');setTimeout(()=>{if(!NET.lost)netBanner(null)},2200)}
+
+/* ---------- teardown ---------- */
+function netReset(){
+ NET.closing=true;
+ clearInterval(NET.hb);clearTimeout(NET.retryTimer);clearTimeout(NET.sigTimer);clearTimeout(NET.graceTimer);clearInterval(NET.graceTick);
+ netKill(conn);netKill(NET.dialing);netKill(peer);conn=null;peer=null;
+ Object.assign(NET,{role:null,code:null,roomId:null,token:null,guestToken:null,started:false,joined:false,fatal:false,hb:null,lastRx:0,lost:false,retry:0,retryTimer:null,sigTimer:null,sigTry:0,hostTries:0,graceTimer:null,graceTick:null,graceEnd:0,dialing:null});
+ NET.closing=false;netBanner(null);netTools([]);netBusy(false);
+}
+function netCancel(){netReset();netStatus('')}
+
+/* ---------- PeerJS loader (falls back to other CDNs) ---------- */
+function netLoadPeer(){
+ if(typeof Peer!=='undefined')return Promise.resolve(true);
+ const urls=['https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js'];
+ return urls.reduce((p,u)=>p.then(ok=>ok||new Promise(res=>{const s=document.createElement('script');s.src=u;s.onload=()=>res(typeof Peer!=='undefined');s.onerror=()=>res(false);document.head.append(s)})),Promise.resolve(false));
+}
+
+/* ---------- shared transport ---------- */
+function netSend(msg){const c=conn;if(!c||c._dead||!c.open)return false;try{c.send(msg);return true}catch(e){console.warn('netSend failed',e);return false}}
+function netSendAction(a){if(!netSend({t:'do',d:a}))toast('⚠️ Not connected — reconnecting…',1400)}
+function netStartHB(){
+ clearInterval(NET.hb);
+ NET.hb=setInterval(()=>{const c=conn;if(NET.closing||!c||c._dead)return;if(c.open)netSend({t:'ping'});if(Date.now()-NET.lastRx>NET_TIMEOUT)netConnDied(c)},3000);
+}
+function netAdopt(c){const old=conn;c._dead=false;conn=c;NET.lastRx=Date.now();if(old&&old!==c)netKill(old);netStartHB()}
+function netConnDied(c){
+ if(!c||c._dead||c!==conn)return;
+ c._dead=true;try{c.close()}catch(e){}
+ if(NET.role==='host')hostConnLost();else if(NET.role==='guest')guestConnLost();
+}
+/* returns true when the message still needs handling by the caller */
+function netRx(c,msg){
+ if(!msg||typeof msg!=='object'||c._dead)return false;
+ if(c===conn)NET.lastRx=Date.now();
+ if(msg.t==='ping'){netSend({t:'pong'});return false}
+ return msg.t!=='pong';
+}
+function netWake(){
+ if(NET.closing||!NET.role||NET.fatal||netOver())return;
+ NET.lastRx=Date.now();
+ if(conn&&!conn._dead&&conn.open){netSend({t:'ping'});return}
+ if(NET.role==='guest'&&(NET.joined||NET.dialing||NET.retryTimer)){clearTimeout(NET.retryTimer);NET.retryTimer=null;NET.retry=Math.min(NET.retry,1);guestRetry('network is back')}
+ else if(NET.role==='host'&&peer&&(peer.disconnected||peer.destroyed))hostSignalRecover();
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)netWake()});
+window.addEventListener('online',netWake);
+window.addEventListener('beforeunload',()=>{if(NET.role&&(NET.started||NET.joined))netSend({t:'bye'})});
+
+/* ============================== HOST ============================== */
+function hostRoom(){
+ netBusy(true);netStatus('Loading multiplayer…');
+ netLoadPeer().then(ok=>{
+  if(!ok){netBusy(false);netStatus('❌ Multiplayer library failed to load. Check your internet connection and reload.','err');return}
+  netReset();netBusy(true);
+  NET.role='host';HOST=true;BOT=false;SEAT=0;S=null;G=null;Q=[];busy=false;REMOTE_DECK=null;REMOTE_DECK_RECEIVED=false;
+  netTools([{label:'✖ Cancel',fn:netCancel}]);
+  hostOpenPeer(netNewCode(),false);
+ });
+}
+function hostOpenPeer(code,recreate){
+ if(NET.closing||NET.role!=='host')return;
+ if(peer){netKill(peer);peer=null}
+ NET.code=code;NET.roomId='acf-'+code;
+ netStatus(recreate?'🔄 Restoring the room connection…':'Creating room…',recreate?'warn':'');
+ let p;
+ try{p=new Peer(NET.roomId,NET_PEER_OPTS())}catch(err){netStatus('❌ Could not start multiplayer ('+((err&&err.message)||err)+')','err');return}
+ peer=p;
+ const dead=()=>p._x||p!==peer||NET.closing;
+ p.on('open',()=>{if(dead())return;NET.sigTry=0;NET.hostTries=0;hostShowRoom()});
+ p.on('connection',c=>{if(!dead())hostAccept(c)});
+ p.on('disconnected',()=>{if(!dead())hostSignalRecover()});
+ p.on('close',()=>{if(!dead())hostSignalRecover()});
+ p.on('error',err=>{
+  if(dead())return;
+  const ty=err&&err.type;
+  if(ty==='unavailable-id'){
+   if(!NET.started&&!recreate&&NET.hostTries<6){NET.hostTries++;hostOpenPeer(netNewCode(),false)}        // code already taken -> new code
+   else if(NET.started||recreate){netKill(p);peer=null;hostSignalRecover()}                              // our own stale id is still on the server -> retry later
+   else netStatus('❌ Could not create a room. Please try again.','err');
+  }else if(ty==='webrtc'||ty==='peer-unavailable'){console.warn('PeerJS',ty,err)}                        // one bad connection; ignore
+  else if(ty==='invalid-id'||ty==='browser-incompatible'||ty==='ssl-unavailable'||ty==='invalid-key'){netStatus('❌ Multiplayer error ('+ty+')','err')}
+  else hostSignalRecover();                                                                              // network / server-error / socket-* / disconnected
+ });
+}
+function hostShowRoom(){
+ if(NET.started){if(!NET.lost)netBanner(null);return}
+ const c=NET.code;
+ netStatus('✅ Room created! Code: '+c+' — waiting for your friend…','ok');
+ netTools([{label:'📋 Copy code',fn:()=>netCopy(c,'📋 Room code copied')},
+  ...(/^https?:/.test(location.protocol)?[{label:'🔗 Invite link',fn:()=>netCopy(location.href.split('#')[0].split('?')[0]+'#room='+c,'🔗 Invite link copied')}]:[]),
+  {label:'✖ Cancel',fn:netCancel}]);
+}
+/* signalling-server connection lost: existing P2P links keep working, but new ones (and reconnects) need it */
+function hostSignalRecover(){
+ if(NET.closing||NET.role!=='host'||NET.sigTimer)return;
+ if(peer&&!peer.destroyed&&!peer.disconnected)return;
+ const n=++NET.sigTry,d=Math.min(1000*n,8000);
+ if(!NET.started)netStatus('⚠️ Lost connection to the room server — retrying ('+n+')…','warn');
+ NET.sigTimer=setTimeout(()=>{
+  NET.sigTimer=null;
+  if(NET.closing||NET.role!=='host')return;
+  const fresh=!NET.started&&n>8;                                          // never started and the old id seems stuck -> new code
+  if(!peer||peer.destroyed)hostOpenPeer(fresh?netNewCode():NET.code,!fresh);
+  else if(peer.disconnected){
+   try{peer.reconnect()}catch(e){hostOpenPeer(NET.code,true);return}
+   setTimeout(()=>{if(!NET.closing&&peer&&peer.disconnected)hostSignalRecover()},6000);
+  }
+ },d);
+}
+function hostAccept(c){
+ const helloTimer=setTimeout(()=>{if(c!==conn){c._dead=true;try{c.close()}catch(e){}}},10000);   // no handshake -> drop
+ c.on('data',msg=>{
+  if(!msg||typeof msg!=='object')return;
+  if(msg.t==='hello'){clearTimeout(helloTimer);hostHello(c,msg);return}
+  if(c!==conn||!netRx(c,msg))return;
+  if(msg.t==='do'){if(S&&!S.over&&msg.d&&typeof msg.d==='object'){try{hostApply(1,msg.d)}catch(err){console.error('Remote action failed',err)}}}
+  else if(msg.t==='bye')hostGuestLeft();
+ });
+ c.on('close',()=>{clearTimeout(helloTimer);netConnDied(c)});
+ c.on('error',err=>console.warn('Guest connection error',err));
+}
+function hostHello(c,msg){
+ const tok=String(msg.token||'');
+ const reject=why=>{try{c.send({t:'busy',why})}catch(e){}c._dead=true;setTimeout(()=>{try{c.close()}catch(e){}},400)};
+ if(!tok){c._dead=true;try{c.close()}catch(e){}return}
+ if(NET.started){                                                         // match running: only the same guest may come back
+  if(tok!==NET.guestToken){reject('started');return}
+  netAdopt(c);NET.lost=false;clearTimeout(NET.graceTimer);clearInterval(NET.graceTick);
+  netFlash('✅ Opponent reconnected');
+  netSend({t:'ready'});
+  if(last&&last.S)netSend({t:'st',sync:1,d:{S:last.S,ev:[]}});            // full state so the guest catches up
+  return;
+ }
+ if(conn&&!conn._dead&&conn.open&&NET.guestToken&&NET.guestToken!==tok){reject('full');return}
+ if(msg.deck!=null&&!validDeckPool(msg.deck)){try{c.send({t:'err',why:'deck'})}catch(e){}netStatus('⚠️ Friend’s deck is invalid — ask them to choose a valid deck or Random.','warn');return}
+ netAdopt(c);NET.guestToken=tok;
+ REMOTE_DECK=Array.isArray(msg.deck)?msg.deck.map(x=>({...x})):null;REMOTE_DECK_RECEIVED=!!REMOTE_DECK;
+ NET.started=true;netTools([]);netStatus('Opponent connected — starting match…','ok');
+ netSend({t:'ready'});
+ startGame();
+}
+function hostConnLost(){
+ if(netOver())return;
+ if(!NET.started){NET.guestToken=null;netStatus('⚠️ Friend disconnected — the room is still open. Code: '+NET.code,'warn');return}
+ NET.lost=true;NET.graceEnd=Date.now()+NET_GRACE;
+ const tick=()=>{if(!NET.lost||netOver()){clearInterval(NET.graceTick);return}netBanner('⚠️ Opponent connection lost — waiting for them to reconnect… '+Math.max(0,Math.ceil((NET.graceEnd-Date.now())/1000))+'s','warn')};
+ tick();clearInterval(NET.graceTick);NET.graceTick=setInterval(tick,1000);
+ clearTimeout(NET.graceTimer);NET.graceTimer=setTimeout(hostForfeit,NET_GRACE);
+}
+function hostForfeit(){
+ if(!NET.lost||!S||S.over)return;
+ NET.lost=false;clearTimeout(NET.graceTimer);clearInterval(NET.graceTick);netBanner(null);
+ S.over={w:0,why:'dc'};commit([]);
+}
+function hostGuestLeft(){if(!NET.started||netOver())return;NET.lost=true;hostForfeit()}
+
+/* ============================== GUEST ============================== */
+function joinRoom(code){
+ netBusy(true);netStatus('Loading multiplayer…');
+ netLoadPeer().then(ok=>{
+  if(!ok){netBusy(false);netStatus('❌ Multiplayer library failed to load. Check your internet connection and reload.','err');return}
+  netReset();netBusy(true);
+  NET.role='guest';HOST=false;BOT=false;SEAT=1;S=null;G=null;Q=[];busy=false;
+  NET.code=code;NET.roomId='acf-'+code;NET.token=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  netTools([{label:'✖ Cancel',fn:netCancel}]);
+  netStatus('Connecting to room '+code+'…');
+  guestOpenPeer();
+ });
+}
+function guestOpenPeer(){
+ if(NET.closing||NET.role!=='guest'||NET.fatal)return;
+ if(peer){netKill(peer);peer=null}
+ let p;
+ try{p=new Peer(undefined,NET_PEER_OPTS())}catch(err){netStatus('❌ Could not start multiplayer ('+((err&&err.message)||err)+')','err');return}
+ peer=p;
+ const dead=()=>p._x||p!==peer||NET.closing;
+ const linkOk=()=>conn&&!conn._dead&&conn.open;
+ p.on('open',()=>{if(!dead())guestDial()});
+ p.on('disconnected',()=>{if(dead())return;if(linkOk()){try{p.reconnect()}catch(e){}}else guestRetry('server connection lost')});
+ p.on('close',()=>{if(dead())return;if(!linkOk())guestRetry('server connection closed')});
+ p.on('error',err=>{
+  if(dead())return;
+  const ty=err&&err.type;
+  if(ty==='peer-unavailable')guestRetry('room not found');
+  else if(ty==='webrtc')console.warn('PeerJS webrtc error',err);
+  else guestRetry('server problem ('+(ty||'unknown')+')');
+ });
+}
+function guestDial(){
+ if(NET.closing||NET.role!=='guest'||NET.fatal)return;
+ if(!peer||peer.destroyed||peer.disconnected||!peer.open){guestRetry('not ready');return}
+ let c;
+ try{c=peer.connect(NET.roomId,{reliable:true,serialization:'json'})}catch(err){guestRetry('could not dial');return}
+ if(!c){guestRetry('could not dial');return}
+ NET.dialing=c;
+ const fail=why=>{if(NET.dialing!==c)return false;NET.dialing=null;netKill(c);guestRetry(why);return true};
+ const to=setTimeout(()=>fail('timed out'),NET_DIAL_TIMEOUT);
+ c.on('open',()=>{
+  clearTimeout(to);
+  if(NET.dialing!==c||NET.closing){netKill(c);return}
+  NET.dialing=null;netAdopt(c);
+  try{c.send({t:'hello',token:NET.token,deck:getActiveDeckPool()})}catch(e){guestRetry('handshake failed');return}
+  netStatus(NET.joined?'Reconnected — syncing…':'Connected! Waiting for the host…','ok');
+ });
+ c.on('data',msg=>{if(netRx(c,msg))guestOnMsg(msg)});
+ c.on('close',()=>{clearTimeout(to);if(!fail('connection closed'))netConnDied(c)});
+ c.on('error',err=>{console.warn('Connection error',err);clearTimeout(to);if(!fail('connection error'))netConnDied(c)});
+}
+function guestOnMsg(msg){
+ NET.retry=0;
+ if(msg.t==='ready'){if(!NET.joined)netStatus('✅ Connected! Waiting for the host to start…','ok')}
+ else if(msg.t==='st'&&msg.d&&msg.d.S){
+  NET.joined=true;netTools([]);
+  if(NET.lost){NET.lost=false;netFlash('✅ Reconnected')}
+  recv(msg.d.S,msg.sync?[]:(msg.d.ev||[]));
+ }
+ else if(msg.t==='busy'){const m=msg.why==='started'?'This match has already started with another player.':'This room is full.';guestFatal(m)}
+ else if(msg.t==='err'){guestFatal('Your deck is not valid for this room — choose a valid deck or Random.')}
+ else if(msg.t==='bye'){guestFatal('The host left the match.')}
+}
+function guestFatal(m){
+ if(netOver())return;
+ if(NET.joined){NET.fatal=true;clearInterval(NET.hb);clearTimeout(NET.retryTimer);NET.retryTimer=null;netBanner('❌ '+m,'err',[{label:'Main Menu',fn:()=>location.reload()}])}
+ else{netReset();netStatus('❌ '+m,'err')}
+}
+function guestConnLost(){if(netOver()||NET.fatal)return;guestRetry('connection lost')}
+function guestRetry(reason){
+ if(NET.closing||NET.role!=='guest'||NET.fatal||NET.retryTimer||netOver())return;
+ const inGame=NET.joined,max=inGame?NET_GUEST_MAX:NET_JOIN_MAX;
+ if(++NET.retry>max){guestGiveUp(reason);return}
+ const d=Math.min(1000*NET.retry,5000);
+ if(inGame){NET.lost=true;netBanner('⚠️ Connection lost ('+reason+') — reconnecting '+NET.retry+'/'+max+'…','warn')}
+ else netStatus('⚠️ '+reason+' — retrying ('+NET.retry+'/'+max+')…','warn');
+ NET.retryTimer=setTimeout(()=>{
+  NET.retryTimer=null;
+  if(NET.closing||NET.role!=='guest'||NET.fatal||netOver())return;
+  if(conn){netKill(conn);conn=null}
+  if(NET.dialing){netKill(NET.dialing);NET.dialing=null}
+  if(peer&&!peer.destroyed&&!peer.disconnected&&peer.open)guestDial();else guestOpenPeer();
+ },d);
+}
+function guestGiveUp(reason){
+ if(NET.joined){
+  clearInterval(NET.hb);
+  netBanner('❌ Could not reconnect to the host ('+reason+').','err',[{label:'🔄 Try again',fn:()=>{NET.retry=0;guestRetry('retrying')}},{label:'Main Menu',fn:()=>location.reload()}]);
  }else{
-  peer=new Peer();
-  peer.on('open',()=>{$('#st').textContent='Joining Room '+code+'...';
-   conn=peer.connect(roomCode);
-   conn.on('open',()=>{$('#st').textContent='Joined Room! Waiting for host...';conn.send({t:'deck',d:getActiveDeckPool()})});
-   conn.on('data',msg=>{if(msg.t==='st')recv(msg.d.S,msg.d.ev)})});
-  peer.on('error',()=>{$('#st').textContent='Room not found or connection failed'});
- }}
+  const c=NET.code;netReset();
+  netStatus('❌ Could not join room '+c+' ('+reason+'). Check the code and make sure the host still has the room open.','err');
+ }
+}
+
+/* kept for compatibility with older call sites */
+function online(code,isHost){if(isHost)hostRoom();else joinRoom(String(code))}
 
 /* ============================================================================
    ANIMATION & BATTLE EVENTS
@@ -2583,8 +2857,11 @@ function pickMode(m){MODE=m;document.querySelectorAll('#modeBox button').forEach
 document.querySelectorAll('#modeBox button').forEach(b=>b.onclick=()=>pickMode(b.dataset.mode));pickMode(MODE);
 $('#bot').onclick=()=>{BOT=true;HOST=true;SEAT=0;startGame()};
 document.querySelectorAll('#botLevel button').forEach(b=>b.onclick=()=>{BOT_LEVEL=b.dataset.lv;document.querySelectorAll('#botLevel button').forEach(x=>x.classList.toggle('pri',x===b));toast('🤖 Bot: '+({easy:'Easy',normal:'Normal',hard:'Hard'})[BOT_LEVEL],1200)});
-$('#mk').onclick=()=>online(String(1000+rnd(9000)),true);
-$('#jn').onclick=()=>{const c=$('#code').value.trim();if(c)online(c,false)};
+$('#mk').onclick=()=>hostRoom();
+$('#jn').onclick=()=>{const c=$('#code').value.replace(/\D/g,'');if(!/^\d{6}$/.test(c)){netStatus('⚠️ Enter the 6-digit room code from your friend.','warn');return}joinRoom(c)};
+(()=>{const st=$('#st');if(st){st.style.maxWidth='440px';st.style.lineHeight='1.4';if(!$('#netTools')){const tl=document.createElement('div');tl.id='netTools';tl.style.cssText='display:none;gap:8px;flex-wrap:wrap;justify-content:center';st.after(tl)}}
+ const inp=$('#code');inp.addEventListener('input',()=>{inp.value=inp.value.replace(/\D/g,'').slice(0,6)});inp.addEventListener('keydown',e=>{if(e.key==='Enter')$('#jn').click()});
+ const m=/[#&?]room=(\d{6})/.exec(location.hash+location.search);if(m)inp.value=m[1]})();
 // --------------------------- Deck Builder ---------------------------
 const DECK_STORE_KEY='animeCardFight.deckBuilder.v1';
 let DECK_DATA=Array.from({length:10},(_,i)=>({name:'Deck '+(i+1),cards:[]}));
